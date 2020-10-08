@@ -6,7 +6,6 @@
 
 - ROS
 
-- Matlab, Simulink
+- Unity ROS#
 
-- モデル: KINOVA® Gen3 7-axis robot
-https://www.kinovarobotics.com/en/products/gen3-robot
+- モデル: 
