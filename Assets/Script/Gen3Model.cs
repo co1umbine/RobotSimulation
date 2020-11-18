@@ -12,8 +12,11 @@ namespace RobotSimulation
     public class Gen3Model : MonoBehaviour
     {
         [SerializeField] List<JointStateReader> joints;  // 1~6
-        List<JointStateWriter> jointsW = new List<JointStateWriter>();
-        List<HingeJoint> hinge = new List<HingeJoint>();
+        //List<JointStateWriter> jointsW = new List<JointStateWriter>();
+
+        //List<HingeJoint> hinge = new List<HingeJoint>();
+        List<MyJoint> m_joints = new List<MyJoint>();
+
         [SerializeField] Transform[] fowardK;
         HomogeneourCoordinate hC;
         List<Matrix4x4> HTMs = new List<Matrix4x4>();
@@ -25,9 +28,62 @@ namespace RobotSimulation
             hC = GetComponent<HomogeneourCoordinate>();
             foreach(var j in joints)
             {
-                jointsW.Add(j.GetComponent<JointStateWriter>());
-                hinge.Add(j.GetComponent<HingeJoint>());
+                m_joints.Add(j.GetComponent<MyJoint>());
             }
+            StartCoroutine(StepUpdate());
+        }
+
+        IEnumerator StepUpdate()
+        {
+            var setter = new List<float>();
+            foreach (var joint in m_joints)
+            {
+                setter.Add(0 * Mathf.PI);
+            }
+            m_joints[0].UpdateJointStateHierarchical(setter);
+
+            var thetas = new List<float>();
+            foreach (var joint in m_joints)
+            {
+                thetas.Add(joint.GetPosition());
+            }
+            print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
+            HTMs = hC.GetHTM(thetas);
+
+            for (var i = 0; i < HTMs.Count(); i++)
+            {
+                fowardK[i].localPosition = HTMs[i] * new Vector4(0, 0, 0, 1);
+            }
+            fowardK[fowardK.Length - 1].localPosition = HTMs[HTMs.Count() - 1] * hE;
+
+            UnityEditor.EditorApplication.isPaused = true;
+            yield return null;
+
+
+            setter = new List<float>();
+            foreach (var joint in m_joints)
+            {
+                setter.Add(0.5f * Mathf.PI);
+            }
+            m_joints[0].UpdateJointStateHierarchical(setter);
+
+            thetas = new List<float>();
+            foreach (var joint in m_joints)
+            {
+                thetas.Add(joint.GetPosition());
+            }
+            print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
+            HTMs = hC.GetHTM(thetas);
+
+            for (var i = 0; i < HTMs.Count(); i++)
+            {
+                fowardK[i].localPosition = HTMs[i] * new Vector4(0, 0, 0, 1);
+            }
+            fowardK[fowardK.Length - 1].localPosition = HTMs[HTMs.Count() - 1] * hE;
+            UnityEditor.EditorApplication.isPaused = true;
+            yield return null;
+
+            
         }
 
         // Update is called once per frame
@@ -39,7 +95,7 @@ namespace RobotSimulation
             }
             fowardK[fowardK.Length - 1].position = joints[joints.Count() - 1].transform.position + joints[joints.Count()-1].transform.rotation * new Vector3(hE.x, hE.z, hE.y);
             */
-
+            /*
             foreach (var joint in jointsW)
             {
                 joint.Write(0.5f * Mathf.PI);
@@ -47,7 +103,7 @@ namespace RobotSimulation
             var thetas = new List<float>();
             foreach (var joint in hinge)
             {
-                thetas.Add(joint.angle);
+                thetas.Add(0.5f * Mathf.PI);
             }
             print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
             HTMs = hC.GetHTM(thetas);
@@ -57,22 +113,29 @@ namespace RobotSimulation
                 fowardK[i].localPosition = HTMs[i] * new Vector4(0, 0, 0, 1);
             }
             fowardK[fowardK.Length - 1].localPosition = HTMs[HTMs.Count() - 1] * hE;
-            UnityEditor.EditorApplication.isPaused = true;
+            UnityEditor.EditorApplication.isPaused = true;*/
         }
 
         private void OnDrawGizmos()
         {
+            Gizmos.color = Color.red;
+            Vector3 origin = new Vector4(0, 0, 0, 1);
+            Vector3 x1 = new Vector4(0.1f, 0, 0, 1);
+            Gizmos.DrawLine(origin, x1);
+            Gizmos.color = Color.blue;
+            Vector3 z1 = new Vector4(0, 0, 0.1f, 1);
+            Gizmos.DrawLine(origin, z1);
             int i = 0;
             foreach(var htm in HTMs)
             {
                 //if (i == dispJoint) 
                 //{
                 Gizmos.color = Color.red;
-                Vector3 origin = htm * new Vector4(0, 0, 0, 1);
-                Vector3 x1 = htm * new Vector4(0.1f, 0, 0, 1);
+                origin = htm * new Vector4(0, 0, 0, 1);
+                x1 = htm * new Vector4(0.1f, 0, 0, 1);
                 Gizmos.DrawLine(origin, x1);
                 Gizmos.color = Color.blue;
-                Vector3 z1 = htm * new Vector4(0, 0, 0.1f, 1);
+                z1 = htm * new Vector4(0, 0, 0.1f, 1);
                 Gizmos.DrawLine(origin, z1); 
                 //}
 
