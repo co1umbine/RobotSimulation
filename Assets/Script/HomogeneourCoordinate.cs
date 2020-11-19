@@ -45,13 +45,13 @@ namespace RobotSimulation
                 var dMat = Matrix4x4.Translate(new Vector3(0, 0, param.d));
                 var thetaMat = Matrix4x4.Rotate(Quaternion.Euler(0, 0, (param.thetaPI * Mathf.PI + deltaThetasRad[i]) * Mathf.Rad2Deg));
                 if (i == 1) { print("i:1 theta+pi/2 "+ ((param.thetaPI * Mathf.PI + deltaThetasRad[i]) * Mathf.Rad2Deg) + " theta2 " + (deltaThetasRad[i] * Mathf.Rad2Deg)); }
-                print($"i: {i}\na\n{aMat.ToString()}\nalpha\n{alphaMat.ToString()}\nd\n{dMat.ToString()}\ntheta\n{thetaMat.ToString()}");
+                //print($"i: {i}\na\n{aMat.ToString()}\nalpha\n{alphaMat.ToString()}\nd\n{dMat.ToString()}\ntheta\n{thetaMat.ToString()}");
 
                 HTM = HTM * aMat * alphaMat * dMat * thetaMat;
                 returns.Add(HTM);
                 i++;
             }
-            print(returns[returns.Count()-1].ToString());
+            //print(returns[returns.Count()-1].ToString());
             return returns;
         }
         public List<Matrix4x4> GetHTM(List<LinkParam> linkParams)

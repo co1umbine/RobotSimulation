@@ -11,11 +11,15 @@ namespace RobotSimulation
         [SerializeField] private MyJoint child;
 
         Quaternion defaultRotation;
+        //Quaternion currentRotation;
 
+        private void Awake()
+        {
+            joint = GetComponent<HingeJoint>();
+            defaultRotation = transform.localRotation;
+        }
         private void Start()
         {
-            defaultRotation = transform.localRotation;
-            joint = GetComponent<HingeJoint>();
         }
 
         public float GetPosition()
@@ -30,11 +34,11 @@ namespace RobotSimulation
         {
             return joint.motor.force;
         }
-
+        // TODO limit
         public void OnUpdateJointState(float state)
         {
             Quaternion rot = Quaternion.AngleAxis(state * Mathf.Rad2Deg, joint.axis);
-            transform.rotation = transform.rotation * rot;
+            transform.localRotation = defaultRotation * rot;
         }
 
         public void UpdateJointStateHierarchical(List<float> states)

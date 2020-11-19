@@ -11,109 +11,81 @@ namespace RobotSimulation
 {
     public class Gen3Model : MonoBehaviour
     {
-        [SerializeField] List<JointStateReader> joints;  // 1~6
-        //List<JointStateWriter> jointsW = new List<JointStateWriter>();
+        [SerializeField] List<MyJoint> joints;  // 1~6
+        [SerializeField, Range(-180, 180)] float angle1 = 0;
+        [SerializeField, Range(-138.0828f, 138.0828f)] float angle2 = 0;
+        [SerializeField, Range(-152.4068f, 152.4068f)] float angle3 = 0;
+        [SerializeField, Range(-180, 180)] float angle4 = 0;
+        [SerializeField, Range(-127.7696f, 127.7696f)] float angle5 = 0;
+        [SerializeField, Range(-180, 180)] float angle6 = 0;
+        [SerializeField] FKManager fk;
 
-        //List<HingeJoint> hinge = new List<HingeJoint>();
-        List<MyJoint> m_joints = new List<MyJoint>();
-
-        [SerializeField] Transform[] fowardK;
         HomogeneourCoordinate hC;
         List<Matrix4x4> HTMs = new List<Matrix4x4>();
-        Vector4 hE = new Vector4(0, 0, -0.14f, 1);
-        [SerializeField] int dispJoint;
+        //Vector4 hE = new Vector4(0, 0, -0.14f, 1);
 
         void Start()
         {
             hC = GetComponent<HomogeneourCoordinate>();
-            foreach(var j in joints)
-            {
-                m_joints.Add(j.GetComponent<MyJoint>());
-            }
-            StartCoroutine(StepUpdate());
         }
 
-        IEnumerator StepUpdate()
-        {
-            var setter = new List<float>();
-            foreach (var joint in m_joints)
-            {
-                setter.Add(0 * Mathf.PI);
-            }
-            m_joints[0].UpdateJointStateHierarchical(setter);
+        //IEnumerator StepUpdate()
+        //{
+        //    foreach (var joint in joints)
+        //    {
+        //        joint.OnUpdateJointState(0.0f * Mathf.PI);
+        //    }
 
-            var thetas = new List<float>();
-            foreach (var joint in m_joints)
-            {
-                thetas.Add(joint.GetPosition());
-            }
-            print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
-            HTMs = hC.GetHTM(thetas);
-
-            for (var i = 0; i < HTMs.Count(); i++)
-            {
-                fowardK[i].localPosition = HTMs[i] * new Vector4(0, 0, 0, 1);
-            }
-            fowardK[fowardK.Length - 1].localPosition = HTMs[HTMs.Count() - 1] * hE;
-
-            UnityEditor.EditorApplication.isPaused = true;
-            yield return null;
+        //    var thetas = new List<float>();
+        //    foreach (var joint in joints)
+        //    {
+        //        thetas.Add(joint.GetPosition());
+        //    }
+        //    print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
+        //    HTMs = hC.GetHTM(thetas);
 
 
-            setter = new List<float>();
-            foreach (var joint in m_joints)
-            {
-                setter.Add(0.5f * Mathf.PI);
-            }
-            m_joints[0].UpdateJointStateHierarchical(setter);
 
-            thetas = new List<float>();
-            foreach (var joint in m_joints)
-            {
-                thetas.Add(joint.GetPosition());
-            }
-            print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
-            HTMs = hC.GetHTM(thetas);
+        //    int time = 0;
+        //    while (true)
+        //    {
+        //        foreach (var joint in joints)
+        //        {
+        //            joint.OnUpdateJointState(Mathf.Sin(time * Time.deltaTime) * Mathf.PI);
+        //        }
+        //        thetas = new List<float>();
+        //        foreach (var joint in joints)
+        //        {
+        //            thetas.Add(joint.GetPosition());
+        //        }
+        //        print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
+        //        HTMs = hC.GetHTM(thetas);
 
-            for (var i = 0; i < HTMs.Count(); i++)
-            {
-                fowardK[i].localPosition = HTMs[i] * new Vector4(0, 0, 0, 1);
-            }
-            fowardK[fowardK.Length - 1].localPosition = HTMs[HTMs.Count() - 1] * hE;
-            UnityEditor.EditorApplication.isPaused = true;
-            yield return null;
-
-            
-        }
+        //        time++;
+        //        yield return null;
+        //    }
+        //}
 
         // Update is called once per frame
         void Update()
         {
-            /*for(int i =0; i<joints.Count(); i++)
+            var thetas = new List<float>() { angle1 * Mathf.Deg2Rad, angle2 * Mathf.Deg2Rad, angle3 * Mathf.Deg2Rad, angle4 * Mathf.Deg2Rad, angle5 * Mathf.Deg2Rad, angle6 * Mathf.Deg2Rad };
+            int i = 0;
+            foreach (var joint in joints)
             {
-                fowardK[i].position = joints[i].transform.position;
+                joint.OnUpdateJointState(thetas[i]);
+                i++;
             }
-            fowardK[fowardK.Length - 1].position = joints[joints.Count() - 1].transform.position + joints[joints.Count()-1].transform.rotation * new Vector3(hE.x, hE.z, hE.y);
-            */
-            /*
-            foreach (var joint in jointsW)
-            {
-                joint.Write(0.5f * Mathf.PI);
-            }
-            var thetas = new List<float>();
-            foreach (var joint in hinge)
-            {
-                thetas.Add(0.5f * Mathf.PI);
-            }
-            print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
+
+            //foreach (var joint in joints)
+            //{
+            //    thetas.Add(joint.GetPosition());
+            //}
+
+            //print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
             HTMs = hC.GetHTM(thetas);
 
-            for(var i = 0; i < HTMs.Count(); i++)
-            {
-                fowardK[i].localPosition = HTMs[i] * new Vector4(0, 0, 0, 1);
-            }
-            fowardK[fowardK.Length - 1].localPosition = HTMs[HTMs.Count() - 1] * hE;
-            UnityEditor.EditorApplication.isPaused = true;*/
+            fk.FK(HTMs);
         }
 
         private void OnDrawGizmos()
