@@ -19,14 +19,21 @@ namespace RobotSimulation
         [SerializeField, Range(-127.7696f, 127.7696f)] float angle5 = 0;
         [SerializeField, Range(-180, 180)] float angle6 = 0;
         [SerializeField] FKManager fk;
+        [SerializeField] IKManager ik;
+
+        [SerializeField] bool isIK = false;
 
         HomogeneourCoordinate hC;
         List<Matrix4x4> HTMs = new List<Matrix4x4>();
-        //Vector4 hE = new Vector4(0, 0, -0.14f, 1);
+        Matrix4x4 EndHTM = new Matrix4x4();
+        List<float> currentAngles;
+
+        Coroutine ikCoroutine;
 
         void Start()
         {
             hC = GetComponent<HomogeneourCoordinate>();
+            currentAngles = new List<float>() { angle1 * Mathf.Deg2Rad, angle2 * Mathf.Deg2Rad, angle3 * Mathf.Deg2Rad, angle4 * Mathf.Deg2Rad, angle5 * Mathf.Deg2Rad, angle6 * Mathf.Deg2Rad };
         }
 
         //IEnumerator StepUpdate()
@@ -69,13 +76,6 @@ namespace RobotSimulation
         // Update is called once per frame
         void Update()
         {
-            var thetas = new List<float>() { angle1 * Mathf.Deg2Rad, angle2 * Mathf.Deg2Rad, angle3 * Mathf.Deg2Rad, angle4 * Mathf.Deg2Rad, angle5 * Mathf.Deg2Rad, angle6 * Mathf.Deg2Rad};
-            int i = 0;
-            foreach (var joint in joints)
-            {
-                joint.OnUpdateJointState(thetas[i]);
-                i++;
-            }
 
             //var readThetas = new List<float>();
             //foreach (var joint in joints)
@@ -84,9 +84,60 @@ namespace RobotSimulation
             //}
 
             //print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
-            HTMs = hC.GetHTM(thetas);
 
-            fk.FK(HTMs);
+            if (!isIK)
+            {
+                currentAngles = new List<float>() { angle1 * Mathf.Deg2Rad, angle2 * Mathf.Deg2Rad, angle3 * Mathf.Deg2Rad, angle4 * Mathf.Deg2Rad, angle5 * Mathf.Deg2Rad, angle6 * Mathf.Deg2Rad };
+                SetAngles(currentAngles);
+                HTMs = hC.GetHTMs(currentAngles);
+                EndHTM = HTMs[HTMs.Count() - 1];
+                fk.FK(HTMs);
+            }
+            else
+            {
+                SetAngles(currentAngles);
+                if(ikCoroutine == null)
+                {
+                    ikCoroutine = StartCoroutine(IK());
+                }
+            }
+
+        }
+
+        IEnumerator IK()
+        {
+            while (true)
+            {
+                if (isIK)
+                {
+                    //var resultAngle = new List<float>(currentAngles);
+                    yield return StartCoroutine(ik.IK(currentAngles, hC.LinkParams, fk));
+                    //currentAngles = resultAngle;
+                    SetAngles(currentAngles);
+                    //UnityEditor.EditorApplication.isPaused = true;
+                    yield return null;
+                }
+            }
+        }
+
+        private void SetAngles(List<float> angle)
+        {
+            int i = 0;
+            foreach (var joint in joints)
+            {
+                joint.OnUpdateJointState(angle[i]);
+                i++;
+            }
+        }
+
+        public Vector3 CurrentEndPosition()
+        {
+            return fk.GetEndPosition(EndHTM);
+        }
+
+        public double[,] CurrentEndRotation()
+        {
+            return EndHTM.RotationMatrix();
         }
 
         private void OnDrawGizmos()

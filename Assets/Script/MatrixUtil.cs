@@ -1,6 +1,8 @@
-﻿using System;
+﻿using RosSharp;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace RobotSimulation
@@ -43,6 +45,53 @@ namespace RobotSimulation
             }
 
             return product;
+        }
+        public static double[,] ScalarTimes(this double s, double[,] A)
+        {
+
+            double[,] product = new double[A.GetLength(0), A.GetLength(1)];
+
+            for (int i = 0; i < A.GetLength(0); i++)
+            {
+                for (int j = 0; j < A.GetLength(1); j++)
+                {
+                    product[i, j] = A[i, j] * s;
+                }
+            }
+            return product;
+        }
+        public static double[,] Plus(this double[,] A, double[,] B)
+        {
+            int n = A.GetLength(0);
+            int m = A.GetLength(1);
+
+            var result = new double[n, m];
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < m; j++)
+                {
+                    result[i, j] = A[i, j] + B[i, j];
+                }
+            }
+            return result;
+        }
+
+        public static double[,] Minus(this double[,] A, double[,] B)
+        {
+            int n = A.GetLength(0);
+            int m = A.GetLength(1);
+
+            var result = new double[n, m];
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < m; j++)
+                {
+                    result[i, j] = A[i, j] - B[i, j];
+                }
+            }
+            return result;
         }
 
         public static double[,] inverseMatrix(this double[,] A)
@@ -140,6 +189,33 @@ namespace RobotSimulation
                 return invA;
             }
 
+        }
+
+        public static double[,] RotationMatrix(this Matrix4x4 matrix)
+        {
+            return new double[3, 3] { { matrix[0, 0], matrix[0, 1], matrix[0, 2] }, { matrix[1, 0], matrix[1, 1], matrix[1, 2] }, { matrix[2, 0], matrix[2, 1], matrix[2, 2] } };
+        }
+
+        public static double[,] To3x1D(this Vector3 vector3)
+        {
+            return new double[,] { { vector3.x }, { vector3.y }, { vector3.z } };
+        }
+
+        public static Matrix3x3 To3x3(this Matrix4x4 m4x4)
+        {
+            return new Matrix3x3(new float[] { m4x4.m00, m4x4.m01, m4x4.m02, m4x4.m10, m4x4.m11, m4x4.m12, m4x4.m20, m4x4.m21, m4x4.m22 });
+        }
+
+        public static double[,] ToVertical(this IEnumerable<float> floats)
+        {
+            var result = new double[floats.Count(), 1];
+            int i = 0;
+            foreach(var f in floats)
+            {
+                result[i,0] = f;
+                i++;
+            }
+            return result;
         }
     }
 }
