@@ -77,19 +77,22 @@ namespace RobotSimulation
         void Update()
         {
 
-            //var readThetas = new List<float>();
-            //foreach (var joint in joints)
-            //{
-            //    readThetas.Add(joint.GetPosition());
-            //}
-
-            //print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
-
+            
             if (!isIK)
             {
+
+                //print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
+
                 currentAngles = new List<float>() { angle1 * Mathf.Deg2Rad, angle2 * Mathf.Deg2Rad, angle3 * Mathf.Deg2Rad, angle4 * Mathf.Deg2Rad, angle5 * Mathf.Deg2Rad, angle6 * Mathf.Deg2Rad };
                 SetAngles(currentAngles);
-                HTMs = hC.GetHTMs(currentAngles);
+
+                var readThetas = new List<float>();
+                foreach (var joint in joints)
+                {
+                    readThetas.Add(joint.GetPosition());
+                }
+
+                HTMs = hC.GetHTMs(readThetas);
                 EndHTM = HTMs[HTMs.Count() - 1];
                 fk.FK(HTMs);
             }
