@@ -28,7 +28,8 @@ namespace RobotSimulation
 
         public float GetPosition()
         {
-            return prevState;
+            return joint.angle;
+            //return prevState;
             var rotationV = transform.localRotation * Vector3.forward;
             var defaultRotationV = defaultRotation * Vector3.forward;
             return Vector3.SignedAngle(defaultRotationV, rotationV, transform.InverseTransformDirection(joint.axis)) * Mathf.Deg2Rad;

@@ -35,12 +35,12 @@ namespace RobotSimulation
 
         private void SetWidth(float width)
         {
-            KeepTorpue(leftInnerKnuckle, Mathf.Lerp(0, -40, width));
-            KeepTorpue(leftInnerFinger, Mathf.Lerp(0, 40, width));
-            KeepTorpue(leftOuterFinger, Mathf.Lerp(0, -36, width));
-            KeepTorpue(rightInnerKnuckle, Mathf.Lerp(0, 40, width));
-            KeepTorpue(rightInnerFinger, Mathf.Lerp(0, -40, width));
-            KeepTorpue(rightOuterFinger, Mathf.Lerp(0, 36, width));
+            KeepTorpue(leftInnerKnuckle, Mathf.Lerp(0, -40, width) * Mathf.Deg2Rad);
+            KeepTorpue(leftInnerFinger, Mathf.Lerp(0, 40, width) * Mathf.Deg2Rad);
+            KeepTorpue(leftOuterFinger, Mathf.Lerp(0, -36, width) * Mathf.Deg2Rad);
+            KeepTorpue(rightInnerKnuckle, Mathf.Lerp(0, 40, width) * Mathf.Deg2Rad);
+            KeepTorpue(rightInnerFinger, Mathf.Lerp(0, -40, width) * Mathf.Deg2Rad);
+            KeepTorpue(rightOuterFinger, Mathf.Lerp(0, 36, width) * Mathf.Deg2Rad);
         }
 
         private void SetAngles(MyJoint joint, float angle)
