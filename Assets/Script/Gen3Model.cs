@@ -92,17 +92,23 @@ namespace RobotSimulation
                     readThetas.Add(joint.GetPosition());
                 }
 
-                HTMs = hC.GetHTMs(readThetas);
+                HTMs = hC.GetHTMs(currentAngles);
                 EndHTM = HTMs[HTMs.Count() - 1];
                 fk.FK(HTMs);
             }
             else
             {
-                SetAngles(currentAngles);
                 if(ikCoroutine == null)
                 {
                     ikCoroutine = StartCoroutine(IK());
                 }
+                SetAngles(currentAngles);
+                angle1 = currentAngles[0] * Mathf.Rad2Deg;
+                angle2 = currentAngles[1] * Mathf.Rad2Deg;
+                angle3 = currentAngles[2] * Mathf.Rad2Deg;
+                angle4 = currentAngles[3] * Mathf.Rad2Deg;
+                angle5 = currentAngles[4] * Mathf.Rad2Deg;
+                angle6 = currentAngles[5] * Mathf.Rad2Deg;
             }
 
         }
@@ -116,7 +122,7 @@ namespace RobotSimulation
                     //var resultAngle = new List<float>(currentAngles);
                     yield return StartCoroutine(ik.IK(currentAngles, hC.LinkParams, fk));
                     //currentAngles = resultAngle;
-                    SetAngles(currentAngles);
+                    //SetAngles(currentAngles);
                     //UnityEditor.EditorApplication.isPaused = true;
                     yield return null;
                 }

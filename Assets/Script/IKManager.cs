@@ -61,11 +61,11 @@ namespace RobotSimulation
                     angles[i] = (float)q[i, 0];
                 }
 
-                if (IsSmallEnough(delta_q, threshold))
-                    yield break;
+                //if (IsSmallEnough(delta_q, threshold))
+                //    yield break;
 
-                if (IsSmallEnough(e_q.Minus(prev_e), threshold))
-                    yield break;
+                //if (IsSmallEnough(e_q.Minus(prev_e), threshold))
+                //    yield break;
 
 
                 prev_e = e_q;
