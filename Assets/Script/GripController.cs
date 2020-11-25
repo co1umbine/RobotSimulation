@@ -49,7 +49,7 @@ namespace RobotSimulation
         }
         private void KeepTorpue(MyJoint joint, float angle)
         {
-            joint.OnUpdateJointState(angle * Mathf.Deg2Rad);
+            joint.OnUpdateJointState(angle);
         }
     }
 }

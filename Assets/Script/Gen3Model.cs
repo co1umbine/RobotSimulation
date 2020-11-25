@@ -80,6 +80,11 @@ namespace RobotSimulation
             
             if (!isIK)
             {
+                if(ikCoroutine != null)
+                {
+                    StopCoroutine(ikCoroutine);
+                    ikCoroutine = null;
+                }
 
                 //print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
 
