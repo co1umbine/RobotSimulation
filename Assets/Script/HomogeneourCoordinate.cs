@@ -55,10 +55,7 @@ namespace RobotSimulation
 
         public List<Matrix4x4> GetHTMs(List<float> thetas)
         {
-            //if(thetas.Count() == LinkParams.Count())
-            //{
-                deltaThetasRad = thetas;
-            //}
+            deltaThetasRad = thetas;
             return GetHTMs();
         }
 

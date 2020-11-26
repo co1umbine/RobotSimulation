@@ -21,6 +21,7 @@ namespace RobotSimulation
         [SerializeField] FKManager fk;
         [SerializeField] IKManager ik;
 
+        [SerializeField] bool isInControl = false;
         [SerializeField] bool isIK = false;
 
         HomogeneourCoordinate hC;
@@ -30,10 +31,14 @@ namespace RobotSimulation
 
         Coroutine ikCoroutine;
 
-        void Start()
+        private void Awake()
         {
             hC = GetComponent<HomogeneourCoordinate>();
             currentAngles = new List<float>() { angle1 * Mathf.Deg2Rad, angle2 * Mathf.Deg2Rad, angle3 * Mathf.Deg2Rad, angle4 * Mathf.Deg2Rad, angle5 * Mathf.Deg2Rad, angle6 * Mathf.Deg2Rad };
+        }
+
+        void Start()
+        {
         }
 
         //IEnumerator StepUpdate()
@@ -74,64 +79,93 @@ namespace RobotSimulation
         //}
 
         // Update is called once per frame
-        void Update()
+        void FixedUpdate()
         {
 
-            
-            if (!isIK)
+            if (!isInControl)
             {
-                if(ikCoroutine != null)
+                if (!isIK)
                 {
-                    StopCoroutine(ikCoroutine);
-                    ikCoroutine = null;
+                    if (ikCoroutine != null)
+                    {
+                        StopCoroutine(ikCoroutine);
+                        ikCoroutine = null;
+                    }
+
+                    //print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
+
+                    currentAngles = new List<float>() { angle1 * Mathf.Deg2Rad, angle2 * Mathf.Deg2Rad, angle3 * Mathf.Deg2Rad, angle4 * Mathf.Deg2Rad, angle5 * Mathf.Deg2Rad, angle6 * Mathf.Deg2Rad };
+                    SetAngles(currentAngles);
+
+                    var readThetas = new List<float>();
+                    foreach (var joint in joints)
+                    {
+                        readThetas.Add(joint.GetPosition());
+                    }
+
+                    HTMs = hC.GetHTMs(readThetas);
+                    EndHTM = HTMs[HTMs.Count() - 1];
+                    fk.FK(HTMs);
                 }
-
-                //print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
-
-                currentAngles = new List<float>() { angle1 * Mathf.Deg2Rad, angle2 * Mathf.Deg2Rad, angle3 * Mathf.Deg2Rad, angle4 * Mathf.Deg2Rad, angle5 * Mathf.Deg2Rad, angle6 * Mathf.Deg2Rad };
-                SetAngles(currentAngles);
-
-                var readThetas = new List<float>();
-                foreach (var joint in joints)
+                else
                 {
-                    readThetas.Add(joint.GetPosition());
+                    if (ikCoroutine == null)
+                    {
+                        ikCoroutine = StartCoroutine(IKAuto());
+                    }
+                    SetAngles(currentAngles);
+                    angle1 = currentAngles[0] * Mathf.Rad2Deg;
+                    angle2 = currentAngles[1] * Mathf.Rad2Deg;
+                    angle3 = currentAngles[2] * Mathf.Rad2Deg;
+                    angle4 = currentAngles[3] * Mathf.Rad2Deg;
+                    angle5 = currentAngles[4] * Mathf.Rad2Deg;
+                    angle6 = currentAngles[5] * Mathf.Rad2Deg;
                 }
-
-                HTMs = hC.GetHTMs(currentAngles);
-                EndHTM = HTMs[HTMs.Count() - 1];
-                fk.FK(HTMs);
-            }
-            else
-            {
-                if(ikCoroutine == null)
-                {
-                    ikCoroutine = StartCoroutine(IK());
-                }
-                SetAngles(currentAngles);
-                angle1 = currentAngles[0] * Mathf.Rad2Deg;
-                angle2 = currentAngles[1] * Mathf.Rad2Deg;
-                angle3 = currentAngles[2] * Mathf.Rad2Deg;
-                angle4 = currentAngles[3] * Mathf.Rad2Deg;
-                angle5 = currentAngles[4] * Mathf.Rad2Deg;
-                angle6 = currentAngles[5] * Mathf.Rad2Deg;
             }
 
         }
 
-        IEnumerator IK()
+        IEnumerator IKAuto()
         {
             while (true)
             {
                 if (isIK)
                 {
-                    //var resultAngle = new List<float>(currentAngles);
-                    yield return StartCoroutine(ik.IK(currentAngles, hC.LinkParams, fk));
-                    //currentAngles = resultAngle;
-                    //SetAngles(currentAngles);
-                    //UnityEditor.EditorApplication.isPaused = true;
+                    yield return StartCoroutine(ik.IKAuto(currentAngles, hC.LinkParams, fk));
                     yield return null;
                 }
             }
+        }
+
+        public IEnumerator CulcIK(List<float> resultAngles, Vector3 targetPos, Quaternion taregetRot)
+        {
+            yield return StartCoroutine(ik.CulcIK(resultAngles, hC.LinkParams, fk, targetPos, taregetRot));
+        }
+
+        public void SetInControl(bool b)
+        {
+            isInControl = b;
+        }
+
+        public void SetAngle(List<float> angles)
+        {
+            SetInControl(true);
+            SetAngles(angles);
+            angle1 = angles[0] * Mathf.Rad2Deg;
+            angle2 = angles[1] * Mathf.Rad2Deg;
+            angle3 = angles[2] * Mathf.Rad2Deg;
+            angle4 = angles[3] * Mathf.Rad2Deg;
+            angle5 = angles[4] * Mathf.Rad2Deg;
+            angle6 = angles[5] * Mathf.Rad2Deg;
+        }
+        public List<float> GetAngle()
+        {
+            var readThetas = new List<float>();
+            foreach (var joint in joints)
+            {
+                readThetas.Add(joint.GetPosition());
+            }
+            return readThetas;
         }
 
         private void SetAngles(List<float> angle)
@@ -149,9 +183,9 @@ namespace RobotSimulation
             return fk.GetEndPosition(EndHTM);
         }
 
-        public double[,] CurrentEndRotation()
+        public Quaternion CurrentEndRotation()
         {
-            return EndHTM.RotationMatrix();
+            return EndHTM.rotation;
         }
 
         private void OnDrawGizmos()
@@ -166,16 +200,13 @@ namespace RobotSimulation
             int i = 0;
             foreach(var htm in HTMs)
             {
-                //if (i == dispJoint) 
-                //{
                 Gizmos.color = Color.red;
                 origin = htm * new Vector4(0, 0, 0, 1);
                 x1 = htm * new Vector4(0.1f, 0, 0, 1);
                 Gizmos.DrawLine(origin, x1);
                 Gizmos.color = Color.blue;
                 z1 = htm * new Vector4(0, 0, 0.1f, 1);
-                Gizmos.DrawLine(origin, z1); 
-                //}
+                Gizmos.DrawLine(origin, z1);
 
                 i++;
             }

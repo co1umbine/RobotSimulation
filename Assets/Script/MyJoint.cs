@@ -9,6 +9,7 @@ namespace RobotSimulation
     {
         private Rigidbody rb;
         private HingeJoint joint;
+        private ArticulationBody articulation;
         [SerializeField] private MyJoint child;
         [SerializeField] private float pGain = 1;
 
@@ -19,7 +20,8 @@ namespace RobotSimulation
         private void Awake()
         {
             joint = GetComponent<HingeJoint>();
-            rb = GetComponent<Rigidbody>();
+            articulation = GetComponent<ArticulationBody>();
+
             defaultRotation = transform.localRotation;
         }
         private void Start()
@@ -28,7 +30,12 @@ namespace RobotSimulation
 
         public float GetPosition()
         {
-            return joint.angle;
+            if (joint)
+                return joint.angle * Mathf.Deg2Rad;
+            else
+                return articulation.jointPosition[0];  // 一軸回転座標系なので x:= 回転ラジアン
+
+
             //return prevState;
             var rotationV = transform.localRotation * Vector3.forward;
             var defaultRotationV = defaultRotation * Vector3.forward;
@@ -45,6 +52,11 @@ namespace RobotSimulation
         // TODO limit
         public void OnUpdateJointState(float state)
         {
+            var drive = articulation.xDrive;
+            drive.target = state * Mathf.Rad2Deg;
+            articulation.xDrive = drive;
+            return;
+
             joint.useSpring = false;
             prevState = state;
             Quaternion rot = Quaternion.AngleAxis(state * Mathf.Rad2Deg, joint.axis);

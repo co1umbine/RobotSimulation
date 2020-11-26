@@ -17,7 +17,7 @@ using UnityEngine;
 
 namespace RosSharp
 {
-    [RequireComponent(typeof(HingeJoint))]
+    //[RequireComponent(typeof(HingeJoint))]
     [ExecuteInEditMode]
     public class HingeJointLimitsManager : MonoBehaviour
     {

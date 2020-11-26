@@ -22,7 +22,7 @@ namespace RobotSimulation
             { 0, 0, 0, 0, 0, 1 } };
         [SerializeField] private double threshold = 1e-12;
 
-        public IEnumerator IK(List<float> angles, List<LinkParam> linkParams, FKManager fk)
+        public IEnumerator IKAuto(List<float> angles, List<LinkParam> linkParams, FKManager fk)
         {
             int culcCount = 0;
             double[,] q = angles.ToVertical();
@@ -79,6 +79,81 @@ namespace RobotSimulation
             }
             print("loop num: "+culcCount);
             yield break;
+        }
+
+        public IEnumerator CulcIK(List<float> angles, List<LinkParam> linkParams, FKManager fk, Vector3 targetObject, Quaternion targetRotation)
+        {
+            int culcCount = 0;
+            double[,] q = angles.ToVertical();
+
+            double[,] prev_e = new double[6, 1];
+
+            while (culcCount < 10000)
+            {
+
+                var HTMs = HomogeneourCoordinate.GetHTMs(linkParams, angles);
+
+                var J = fk.GetJacobian(HTMs).Matrix;
+                var J_T = J.Transpose();
+
+                var EndHTM = HTMs[HTMs.Count() - 1];
+                var e_q = Error(fk.GetEndPosition(EndHTM), EndHTM.RotationMatrix(), targetObject, targetRotation);
+
+                for (int i = 0; i < 3; i++)
+                {
+                    W_e[i, i] = w_e_pos;
+                }
+                for (int i = 3; i < 6; i++)
+                {
+                    W_e[i, i] = w_e_rot;
+                }
+
+                var Jt_W_J_plus_Wn__inv = (J_T.Times(W_e).Times(J).Plus(W_n(e_q, W_e))).inverseMatrix();
+
+
+                var delta_q = Jt_W_J_plus_Wn__inv.Times(J_T).Times(W_e).Times(e_q);
+
+                q = q.Plus(delta_q);
+
+                for (int i = 0; i < q.GetLength(0); i++)
+                {
+                    angles[i] = (float)q[i, 0];
+                }
+
+                if (IsSmallEnough(delta_q, threshold))
+                {
+                    print("loop num: " + culcCount);
+                    yield break;
+                }
+
+                if (IsSmallEnough(e_q.Minus(prev_e), threshold))
+                {
+                    print("loop num: " + culcCount);
+                    yield break;
+                }
+
+
+                prev_e = e_q;
+
+                culcCount++;
+
+                if (culcCount % 100 == 0)
+                {
+                    yield return null;
+                }
+            }
+            print("loop num: " + culcCount);
+            yield break;
+        }
+
+        private double[,] Error(Vector3 currentPosition, double[,] currentRotation, Vector3 targetPos, Quaternion targetRot)
+        {
+            targetObject.position = targetPos;
+            targetObject.rotation = targetRot;
+
+            Vector3 p_error = targetObject.position - currentPosition;
+            Vector3 r_error = G(targetObject.localToWorldMatrix.RotationMatrix().Times(currentRotation.Transpose()));
+            return new double[6, 1] { { p_error.x }, { p_error.y }, { p_error.z }, { r_error.x }, { r_error.y }, { r_error.z } };
         }
 
         private double[,] Error(Vector3 currentPosition, double[,] currentRotation)

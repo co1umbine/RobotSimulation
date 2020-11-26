@@ -20,7 +20,7 @@ using UnityEngine;
 
 namespace RosSharp.Urdf
 {
-    [RequireComponent(typeof(Rigidbody))]
+    //[RequireComponent(typeof(Rigidbody))]
     public class UrdfInertial : MonoBehaviour
     {
         public bool DisplayInertiaGizmo;

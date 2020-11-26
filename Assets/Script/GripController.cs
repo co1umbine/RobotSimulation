@@ -26,30 +26,31 @@ namespace RobotSimulation
             
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
             //SetAngles(leftInnerFinger, leftInnerFingerAngle * Mathf.Deg2Rad);
             //SetAngles(rightInnerFinger, rightInnerFingerAngle * Mathf.Deg2Rad);
-            SetWidth(width);
+            //SetWidth(width);
         }
 
-        private void SetWidth(float width)
+        public void SetWidth(float width)
         {
-            KeepTorpue(leftInnerKnuckle, Mathf.Lerp(0, -40, width) * Mathf.Deg2Rad);
-            KeepTorpue(leftInnerFinger, Mathf.Lerp(0, 40, width) * Mathf.Deg2Rad);
-            KeepTorpue(leftOuterFinger, Mathf.Lerp(0, -36, width) * Mathf.Deg2Rad);
-            KeepTorpue(rightInnerKnuckle, Mathf.Lerp(0, 40, width) * Mathf.Deg2Rad);
-            KeepTorpue(rightInnerFinger, Mathf.Lerp(0, -40, width) * Mathf.Deg2Rad);
-            KeepTorpue(rightOuterFinger, Mathf.Lerp(0, 36, width) * Mathf.Deg2Rad);
+            leftInnerAngle = KeepTorpue(leftInnerKnuckle, Mathf.Lerp(0, -40, width) * Mathf.Deg2Rad);
+            leftInnerFingerAngle = KeepTorpue(leftInnerFinger, Mathf.Lerp(0, 40, width) * Mathf.Deg2Rad);
+            leftOuterAngle = KeepTorpue(leftOuterFinger, Mathf.Lerp(0, -36, width) * Mathf.Deg2Rad);
+            rightInnerAngle = KeepTorpue(rightInnerKnuckle, Mathf.Lerp(0, 40, width) * Mathf.Deg2Rad);
+            rightInnerFingerAngle = KeepTorpue(rightInnerFinger, Mathf.Lerp(0, -40, width) * Mathf.Deg2Rad);
+            rightOuterAngle = KeepTorpue(rightOuterFinger, Mathf.Lerp(0, 36, width) * Mathf.Deg2Rad);
         }
 
         private void SetAngles(MyJoint joint, float angle)
         {
             joint.OnUpdateJointState(angle);
         }
-        private void KeepTorpue(MyJoint joint, float angle)
+        private float KeepTorpue(MyJoint joint, float angle)
         {
             joint.OnUpdateJointState(angle);
+            return angle * Mathf.Rad2Deg;
         }
     }
 }
