@@ -35,6 +35,7 @@ namespace RobotSimulation
             foreach(var task in taskObjects)
             {
                 robot.SetInControl(true);
+                grip.SetInControl(true);
 
                 var currentAngle = robot.GetAngle();
                 yield return StartCoroutine(robot.CulcIK(currentAngle, task.position + new Vector3(0, 0.1f, 0), Quaternion.Euler(-90, 0, 0)));
@@ -136,6 +137,7 @@ namespace RobotSimulation
             }
 
             robot.SetInControl(false);
+            grip.SetInControl(false);
 
         }
 

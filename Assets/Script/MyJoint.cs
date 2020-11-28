@@ -10,7 +10,6 @@ namespace RobotSimulation
         private Rigidbody rb;
         private HingeJoint joint;
         private ArticulationBody articulation;
-        [SerializeField] private MyJoint child;
         [SerializeField] private float pGain = 1;
 
         Quaternion defaultRotation;
@@ -33,13 +32,7 @@ namespace RobotSimulation
             if (joint)
                 return joint.angle * Mathf.Deg2Rad;
             else
-                return articulation.jointPosition[0];  // 一軸回転座標系なので x:= 回転ラジアン
-
-
-            //return prevState;
-            var rotationV = transform.localRotation * Vector3.forward;
-            var defaultRotationV = defaultRotation * Vector3.forward;
-            return Vector3.SignedAngle(defaultRotationV, rotationV, transform.InverseTransformDirection(joint.axis)) * Mathf.Deg2Rad;
+                return articulation.jointPosition[0];  // 一軸回転座標系なので x == 回転ラジアン
         }
         public float GetVelocity()
         {
@@ -56,11 +49,6 @@ namespace RobotSimulation
             drive.target = state * Mathf.Rad2Deg;
             articulation.xDrive = drive;
             return;
-
-            joint.useSpring = false;
-            prevState = state;
-            Quaternion rot = Quaternion.AngleAxis(state * Mathf.Rad2Deg, joint.axis);
-            transform.localRotation = defaultRotation * rot;
         }
 
         public void KeepTorpue(float state)
@@ -72,13 +60,6 @@ namespace RobotSimulation
             joint.spring = hingeSpring;
             joint.useSpring = true;
             prevState = state;
-        }
-
-        public void UpdateJointStateHierarchical(List<float> states)
-        {
-            OnUpdateJointState(states[0]);
-            states.Remove(states[0]);
-            child?.UpdateJointStateHierarchical(states);
         }
     }
 }
