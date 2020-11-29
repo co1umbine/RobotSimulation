@@ -32,31 +32,34 @@ namespace RobotSimulation
 
         IEnumerator TaskSequence()
         {
-            foreach(var task in taskObjects)
+            var targetAngle = new List<float>();
+            int moveloop;
+            foreach (var task in taskObjects)
             {
                 robot.SetInControl(true);
 
-                var currentAngle = robot.GetAngle();
-                yield return StartCoroutine(robot.CulcIK(currentAngle, task.position + new Vector3(0, 0.1f, 0), Quaternion.Euler(-90, 0, 0)));
+                var taskAbove = task.position + new Vector3(0, 0.1f, 0);
+                targetAngle = robot.GetAngle();
+                yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, 0, 0)));
 
-                int moveloop = 0;
+                moveloop = 0;
                 print("moving");
-                while(!IsCloseEnough(robot.GetAngle(), currentAngle) && moveloop < moveLoopMax)
+                while(!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), currentAngle));
+                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
                     yield return null;
                 }
 
 
                 print("culc");
-                yield return StartCoroutine(robot.CulcIK(currentAngle, task.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, task.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, 0, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while (!IsCloseEnough(robot.GetAngle(), currentAngle) && moveloop < moveLoopMax)
+                while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), currentAngle));
+                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
                     yield return null;
                 }
@@ -64,7 +67,7 @@ namespace RobotSimulation
                 moveloop = 0;
                 print("moving");
                 float gripWidth = 0;
-                while(gripWidth < 0.3f)
+                while(gripWidth < 0.25f)
                 {
                     gripWidth += pg;
                     grip.SetWidth(gripWidth);
@@ -74,38 +77,38 @@ namespace RobotSimulation
 
 
                 print("culc");
-                yield return StartCoroutine(robot.CulcIK(currentAngle, task.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, 0, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while (!IsCloseEnough(robot.GetAngle(), currentAngle) && moveloop < moveLoopMax)
+                while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), currentAngle));
+                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
                     yield return null;
                 }
 
 
                 print("culc");
-                yield return StartCoroutine(robot.CulcIK(currentAngle, midPoint.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, 0, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while (!IsCloseEnough(robot.GetAngle(), currentAngle) && moveloop < moveLoopMax)
+                while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), currentAngle));
+                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
                     yield return null;
                 }
 
                 print("culc");
-                yield return StartCoroutine(robot.CulcIK(currentAngle, goalArea.transform.position, Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, goalArea.transform.position, Quaternion.Euler(-90, 0, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while (!IsCloseEnough(robot.GetAngle(), currentAngle) && moveloop < moveLoopMax)
+                while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), currentAngle));
+                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
                     yield return null;
                 }
@@ -122,16 +125,26 @@ namespace RobotSimulation
 
 
                 print("culc");
-                yield return StartCoroutine(robot.CulcIK(currentAngle, midPoint.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, 0, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while (!IsCloseEnough(robot.GetAngle(), currentAngle) && moveloop < moveLoopMax)
+                while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), currentAngle));
+                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
                     yield return null;
                 }
+                yield return null;
+            }
+
+            moveloop = 0;
+            targetAngle = targetAngle.Select(a => 0f).ToList();
+            print("moving");
+            while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
+            {
+                robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
+                moveloop++;
                 yield return null;
             }
 

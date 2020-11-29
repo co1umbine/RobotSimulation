@@ -10,7 +10,6 @@ namespace RobotSimulation
         private Rigidbody rb;
         private HingeJoint joint;
         private ArticulationBody articulation;
-        [SerializeField] private MyJoint child;
         [SerializeField] private float pGain = 1;
 
         Quaternion defaultRotation;
@@ -72,13 +71,6 @@ namespace RobotSimulation
             joint.spring = hingeSpring;
             joint.useSpring = true;
             prevState = state;
-        }
-
-        public void UpdateJointStateHierarchical(List<float> states)
-        {
-            OnUpdateJointState(states[0]);
-            states.Remove(states[0]);
-            child?.UpdateJointStateHierarchical(states);
         }
     }
 }

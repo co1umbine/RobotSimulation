@@ -1,5 +1,4 @@
 ﻿using Microsoft.Win32;
-using RosSharp.RosBridgeClient;
 using RosSharp.Urdf;
 using System.Collections;
 using System.Collections.Generic;
@@ -41,42 +40,6 @@ namespace RobotSimulation
         {
         }
 
-        //IEnumerator StepUpdate()
-        //{
-        //    foreach (var joint in joints)
-        //    {
-        //        joint.OnUpdateJointState(0.0f * Mathf.PI);
-        //    }
-
-        //    var thetas = new List<float>();
-        //    foreach (var joint in joints)
-        //    {
-        //        thetas.Add(joint.GetPosition());
-        //    }
-        //    print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
-        //    HTMs = hC.GetHTM(thetas);
-
-
-
-        //    int time = 0;
-        //    while (true)
-        //    {
-        //        foreach (var joint in joints)
-        //        {
-        //            joint.OnUpdateJointState(Mathf.Sin(time * Time.deltaTime) * Mathf.PI);
-        //        }
-        //        thetas = new List<float>();
-        //        foreach (var joint in joints)
-        //        {
-        //            thetas.Add(joint.GetPosition());
-        //        }
-        //        print($"angles { thetas[0] * Mathf.Rad2Deg}, { thetas[1] * Mathf.Rad2Deg}, { thetas[2] * Mathf.Rad2Deg}, { thetas[3] * Mathf.Rad2Deg}, { thetas[4] * Mathf.Rad2Deg}, { thetas[5] * Mathf.Rad2Deg}");
-        //        HTMs = hC.GetHTM(thetas);
-
-        //        time++;
-        //        yield return null;
-        //    }
-        //}
 
         // Update is called once per frame
         void FixedUpdate()
@@ -193,20 +156,20 @@ namespace RobotSimulation
             Gizmos.color = Color.red;
             Vector3 origin = new Vector4(0, 0, 0, 1);
             Vector3 x1 = new Vector4(0.1f, 0, 0, 1);
-            Gizmos.DrawLine(origin, x1);
+            Gizmos.DrawLine(origin + transform.position, x1 + transform.position);
             Gizmos.color = Color.blue;
             Vector3 z1 = new Vector4(0, 0, 0.1f, 1);
-            Gizmos.DrawLine(origin, z1);
+            Gizmos.DrawLine(origin + transform.position, z1 + transform.position);
             int i = 0;
             foreach(var htm in HTMs)
             {
                 Gizmos.color = Color.red;
                 origin = htm * new Vector4(0, 0, 0, 1);
                 x1 = htm * new Vector4(0.1f, 0, 0, 1);
-                Gizmos.DrawLine(origin, x1);
+                Gizmos.DrawLine(origin + transform.position, x1 + transform.position);
                 Gizmos.color = Color.blue;
                 z1 = htm * new Vector4(0, 0, 0.1f, 1);
-                Gizmos.DrawLine(origin, z1);
+                Gizmos.DrawLine(origin + transform.position, z1 + transform.position);
 
                 i++;
             }

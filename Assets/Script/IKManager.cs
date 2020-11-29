@@ -151,14 +151,14 @@ namespace RobotSimulation
             targetObject.position = targetPos;
             targetObject.rotation = targetRot;
 
-            Vector3 p_error = targetObject.position - currentPosition;
+            Vector3 p_error = targetObject.localPosition - currentPosition;
             Vector3 r_error = G(targetObject.localToWorldMatrix.RotationMatrix().Times(currentRotation.Transpose()));
             return new double[6, 1] { { p_error.x }, { p_error.y }, { p_error.z }, { r_error.x }, { r_error.y }, { r_error.z } };
         }
 
         private double[,] Error(Vector3 currentPosition, double[,] currentRotation)
         {
-            Vector3 p_error = targetObject.position - currentPosition;
+            Vector3 p_error = targetObject.localPosition - currentPosition;
             Vector3 r_error = G(targetObject.localToWorldMatrix.RotationMatrix().Times(currentRotation.Transpose()));
             return new double[6, 1] { { p_error.x }, { p_error.y }, { p_error.z }, { r_error.x }, { r_error.y }, { r_error.z } };
         }
