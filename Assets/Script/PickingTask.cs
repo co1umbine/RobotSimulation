@@ -8,7 +8,7 @@ namespace RobotSimulation
     public class PickingTask : MonoBehaviour
     {
         [SerializeField] List<Transform> taskObjects;
-        [SerializeField] Collider goalArea;
+        [SerializeField] Transform goalArea;
         [SerializeField] float threshold;
 
         [SerializeField] float p;
@@ -40,11 +40,11 @@ namespace RobotSimulation
 
                 var taskAbove = task.position + new Vector3(0, 0.1f, 0);
                 targetAngle = robot.GetAngle();
-                yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, -90, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while(!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
+                while(!IsCloseEnough(robot.CurrentEndPosition(), taskAbove) && moveloop < moveLoopMax)
                 {
                     robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
@@ -53,11 +53,11 @@ namespace RobotSimulation
 
 
                 print("culc");
-                yield return StartCoroutine(robot.CulcIK(targetAngle, task.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, task.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, -90, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
+                while (!IsCloseEnough(robot.CurrentEndPosition(), task.position + new Vector3(0, 0.01f, 0)) && moveloop < moveLoopMax)
                 {
                     robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
@@ -77,11 +77,11 @@ namespace RobotSimulation
 
 
                 print("culc");
-                yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, -90, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
+                while (!IsCloseEnough(robot.CurrentEndPosition(), taskAbove) && moveloop < moveLoopMax)
                 {
                     robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
@@ -90,11 +90,11 @@ namespace RobotSimulation
 
 
                 print("culc");
-                yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position, Quaternion.Euler(-90, 180, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
+                while (!IsCloseEnough(robot.CurrentEndPosition(), midPoint.position) && moveloop < moveLoopMax)
                 {
                     robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
@@ -102,11 +102,11 @@ namespace RobotSimulation
                 }
 
                 print("culc");
-                yield return StartCoroutine(robot.CulcIK(targetAngle, goalArea.transform.position, Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, goalArea.transform.position, Quaternion.Euler(-90, 90, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
+                while (!IsCloseEnough(robot.CurrentEndPosition(), goalArea.position) && moveloop < moveLoopMax)
                 {
                     robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
@@ -125,11 +125,11 @@ namespace RobotSimulation
 
 
                 print("culc");
-                yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, 0, 0)));
+                yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position, Quaternion.Euler(-90, 0, 0)));
 
                 moveloop = 0;
                 print("moving");
-                while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
+                while (!IsCloseEnough(robot.CurrentEndPosition(), midPoint.position) && moveloop < moveLoopMax)
                 {
                     robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                     moveloop++;
@@ -141,7 +141,7 @@ namespace RobotSimulation
             moveloop = 0;
             targetAngle = targetAngle.Select(a => 0f).ToList();
             print("moving");
-            while (!IsCloseEnough(robot.GetAngle(), targetAngle) && moveloop < moveLoopMax)
+            while (robot.GetAngle().Where(a => a!=0).Any() && moveloop < moveLoopMax)
             {
                 robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
                 moveloop++;
@@ -152,11 +152,11 @@ namespace RobotSimulation
 
         }
 
-        private bool IsCloseEnough(List<float> objects, List<float> targets)
+        private bool IsCloseEnough(Vector3 lhs, Vector3 rhs)
         {
-            for(int i =0; i <objects.Count(); ++i)
+            for(int i =0; i < 3; ++i)
             {
-                if(Mathf.Abs(objects[i] - targets[i]) > threshold)
+                if(Mathf.Abs(lhs[i] - rhs[i]) > threshold)
                 {
                     return false;
                 }
