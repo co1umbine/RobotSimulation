@@ -12106,7 +12106,9 @@ MonoBehaviour:
   w_n: 6
   w_e_pos: 2.5
   w_e_rot: 0.01
-  threshold: 0.0002
+  moveThreshold: 0.0002
+  posThreshold: 0.000000000001
+  rotThreshold: 0.000000000001
 --- !u!114 &462068198
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12157,6 +12159,13 @@ MonoBehaviour:
   pg: 0.001
   moveLoopMax: 1000
   midPoint: {fileID: 1181104829}
+  maxSpeed: 10
+  curve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!43 &467321526
 Mesh:
   m_ObjectHideFlags: 0
@@ -17438,7 +17447,9 @@ MonoBehaviour:
   w_n: 6
   w_e_pos: 3
   w_e_rot: 0.01
-  threshold: 0.0002
+  moveThreshold: 0.0002
+  posThreshold: 0.00001
+  rotThreshold: 0.001
 --- !u!114 &756210315
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17626,11 +17637,45 @@ MonoBehaviour:
   - {fileID: 1881748933}
   - {fileID: 2040602266}
   goalArea: {fileID: 1139792553}
-  threshold: 0.015
+  threshold: 0.1
   p: 5
   pg: 0.001
   moveLoopMax: 1000
   midPoint: {fileID: 530501015}
+  maxSpeed: 1
+  curve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.04406393
+    - serializedVersion: 3
+      time: 0.49998966
+      value: 1.0000197
+      inSlope: -0.003693223
+      outSlope: -0.003693223
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1.0004897
+      value: -0.004717773
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!43 &763872528
 Mesh:
   m_ObjectHideFlags: 0

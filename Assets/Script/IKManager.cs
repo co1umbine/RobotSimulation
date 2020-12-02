@@ -20,7 +20,9 @@ namespace RobotSimulation
             { 0, 0, 0, 1, 0, 0 },
             { 0, 0, 0, 0, 1, 0 },
             { 0, 0, 0, 0, 0, 1 } };
-        [SerializeField] private double threshold = 1e-12;
+        [SerializeField] private double moveThreshold = 1e-12;
+        [SerializeField] private double posThreshold = 1e-12;
+        [SerializeField] private double rotThreshold = 1e-12;
 
         public IEnumerator IKAuto(List<float> angles, List<LinkParam> linkParams, FKManager fk)
         {
@@ -60,12 +62,6 @@ namespace RobotSimulation
                 {
                     angles[i] = (float)q[i, 0];
                 }
-
-                //if (IsSmallEnough(delta_q, threshold))
-                //    yield break;
-
-                //if (IsSmallEnough(e_q.Minus(prev_e), threshold))
-                //    yield break;
 
 
                 prev_e = e_q;
@@ -120,13 +116,13 @@ namespace RobotSimulation
                     angles[i] = (float)q[i, 0];
                 }
 
-                if (IsSmallEnough(delta_q, threshold))
+                if (IsSmallEnough(delta_q, moveThreshold))
                 {
                     print("loop num: " + culcCount);
                     yield break;
                 }
 
-                if (IsSmallEnough(e_q.Minus(prev_e), threshold))
+                if (IsSmallEnough(e_q.Minus(prev_e), posThreshold, rotThreshold))
                 {
                     print("loop num: " + culcCount);
                     yield break;
@@ -189,13 +185,34 @@ namespace RobotSimulation
 
         private bool IsSmallEnough(double[,] V, double threshold)
         {
-            double sqrSum = 0;
             foreach(var v in V)
             {
-                sqrSum += Math.Pow(v, 2);
+                if (Math.Pow(v, 2) > Math.Pow(threshold, 2))
+                    return false;
             }
-            if (sqrSum > Math.Pow(threshold, 2))
-                return false;
+            return true;
+        }
+        private bool IsSmallEnough(double[,] V, double threshold1, double threshold2)
+        {
+            int count = 0;
+            foreach (var v in V)
+            {
+                if (count < 3)
+                {
+                    if (Math.Pow(v, 2) > Math.Pow(threshold1, 2))
+                    {
+                        return false;
+                    }
+                    count++;
+                }
+                else
+                {
+                    if (Math.Pow(v, 2) > Math.Pow(threshold2, 2))
+                    {
+                        return false;
+                    }
+                }
+            }
             return true;
         }
     }

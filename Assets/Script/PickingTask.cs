@@ -16,6 +16,9 @@ namespace RobotSimulation
 
         [SerializeField] float moveLoopMax = 10000;
         [SerializeField] Transform midPoint;
+
+        [SerializeField] float maxSpeed = 10;
+        [SerializeField] AnimationCurve curve;
         Gen3Model robot;
         GripController grip;
 
@@ -32,7 +35,8 @@ namespace RobotSimulation
 
         IEnumerator TaskSequence()
         {
-            var targetAngle = new List<float>();
+            List<float> targetAngle = new List<float>();
+            List<float> startAngle;
             int moveloop;
             foreach (var task in taskObjects)
             {
@@ -44,9 +48,10 @@ namespace RobotSimulation
 
                 moveloop = 0;
                 print("moving");
+                startAngle = robot.GetAngle();
                 while(!IsCloseEnough(robot.CurrentEndPosition(), taskAbove) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
+                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
                     moveloop++;
                     yield return null;
                 }
@@ -57,9 +62,10 @@ namespace RobotSimulation
 
                 moveloop = 0;
                 print("moving");
+                startAngle = robot.GetAngle();
                 while (!IsCloseEnough(robot.CurrentEndPosition(), task.position + new Vector3(0, 0.01f, 0)) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
+                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
                     moveloop++;
                     yield return null;
                 }
@@ -81,9 +87,10 @@ namespace RobotSimulation
 
                 moveloop = 0;
                 print("moving");
+                startAngle = robot.GetAngle();
                 while (!IsCloseEnough(robot.CurrentEndPosition(), taskAbove) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
+                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
                     moveloop++;
                     yield return null;
                 }
@@ -94,9 +101,10 @@ namespace RobotSimulation
 
                 moveloop = 0;
                 print("moving");
+                startAngle = robot.GetAngle();
                 while (!IsCloseEnough(robot.CurrentEndPosition(), midPoint.position) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
+                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
                     moveloop++;
                     yield return null;
                 }
@@ -106,9 +114,10 @@ namespace RobotSimulation
 
                 moveloop = 0;
                 print("moving");
+                startAngle = robot.GetAngle();
                 while (!IsCloseEnough(robot.CurrentEndPosition(), goalArea.position) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
+                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
                     moveloop++;
                     yield return null;
                 }
@@ -129,9 +138,10 @@ namespace RobotSimulation
 
                 moveloop = 0;
                 print("moving");
+                startAngle = robot.GetAngle();
                 while (!IsCloseEnough(robot.CurrentEndPosition(), midPoint.position) && moveloop < moveLoopMax)
                 {
-                    robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
+                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
                     moveloop++;
                     yield return null;
                 }
@@ -141,9 +151,10 @@ namespace RobotSimulation
             moveloop = 0;
             targetAngle = targetAngle.Select(a => 0f).ToList();
             print("moving");
+            startAngle = robot.GetAngle();
             while (robot.GetAngle().Where(a => a!=0).Any() && moveloop < moveLoopMax)
             {
-                robot.SetAngle(AnglesLerp(robot.GetAngle(), targetAngle));
+                robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
                 moveloop++;
                 yield return null;
             }
@@ -163,12 +174,15 @@ namespace RobotSimulation
             }
             return true;
         }
-        private List<float> AnglesLerp(List<float> current, List<float> target)
+        private List<float> AnglesCurve(List<float> current, List<float> start, List<float> target)
         {
             var result = new List<float>();
-            for(int i = 0; i < current.Count(); ++i)
+            for(int i = 0; i < start.Count(); ++i)
             {
-                result.Add(Mathf.Lerp(current[i], target[i], p * Time.deltaTime));
+                var d = target[i] - start[i];
+                var progressRate = curve.Evaluate((current[i] - start[i]) / d);
+
+                result.Add(current[i] + d * maxSpeed * progressRate * Time.deltaTime);
             }
             return result;
         }
