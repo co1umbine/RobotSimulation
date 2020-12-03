@@ -38,6 +38,7 @@ namespace RobotSimulation
             List<float> targetAngle = new List<float>();
             List<float> startAngle;
             FKManager fk = robot.GetFK();
+            List<LinkParam> linkParams = robot.GetLinkParams();
             int moveloop;
             foreach (var task in taskObjects)
             {
@@ -47,7 +48,7 @@ namespace RobotSimulation
                 targetAngle = robot.GetAngle();
                 yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, -90, 0)));
 
-                fk.Foreach(targetAngle);
+                FKManager.Foreach(linkParams, targetAngle, fk);
                 moveloop = 0;
                 print("moving");
                 startAngle = robot.GetAngle();
@@ -62,7 +63,7 @@ namespace RobotSimulation
                 print("culc");
                 yield return StartCoroutine(robot.CulcIK(targetAngle, task.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, -90, 0)));
 
-                fk.Foreach(targetAngle);
+                FKManager.Foreach(linkParams, targetAngle, fk);
                 moveloop = 0;
                 print("moving");
                 startAngle = robot.GetAngle();
@@ -76,7 +77,7 @@ namespace RobotSimulation
                 moveloop = 0;
                 print("moving");
                 float gripWidth = 0;
-                while(gripWidth < 0.25f)
+                while(gripWidth < 0.28f)
                 {
                     gripWidth += pg;
                     grip.SetWidth(gripWidth);
@@ -88,7 +89,7 @@ namespace RobotSimulation
                 print("culc");
                 yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, -90, 0)));
 
-                fk.Foreach(targetAngle);
+                FKManager.Foreach(linkParams, targetAngle, fk);
                 moveloop = 0;
                 print("moving");
                 startAngle = robot.GetAngle();
@@ -103,7 +104,7 @@ namespace RobotSimulation
                 print("culc");
                 yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position, Quaternion.Euler(-90, 180, 0)));
 
-                fk.Foreach(targetAngle);
+                FKManager.Foreach(linkParams, targetAngle, fk);
                 moveloop = 0;
                 print("moving");
                 startAngle = robot.GetAngle();
@@ -117,7 +118,7 @@ namespace RobotSimulation
                 print("culc");
                 yield return StartCoroutine(robot.CulcIK(targetAngle, goalArea.transform.position, Quaternion.Euler(-90, 90, 0)));
 
-                fk.Foreach(targetAngle);
+                FKManager.Foreach(linkParams, targetAngle, fk);
                 moveloop = 0;
                 print("moving");
                 startAngle = robot.GetAngle();
@@ -142,7 +143,7 @@ namespace RobotSimulation
                 print("culc");
                 yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position, Quaternion.Euler(-90, 0, 0)));
 
-                fk.Foreach(targetAngle);
+                FKManager.Foreach(linkParams, targetAngle, fk);
                 moveloop = 0;
                 print("moving");
                 startAngle = robot.GetAngle();
@@ -157,7 +158,7 @@ namespace RobotSimulation
 
             targetAngle = targetAngle.Select(a => 0f).ToList();
 
-            fk.Foreach(targetAngle);
+            FKManager.Foreach(linkParams, targetAngle, fk);
             moveloop = 0;
             print("moving");
             startAngle = robot.GetAngle();
@@ -174,52 +175,55 @@ namespace RobotSimulation
 
         private bool IsCloseEnough(Vector3 lhs, Vector3 rhs)
         {
-            for(int i =0; i < 3; ++i)
+            if((lhs - rhs).magnitude > threshold)
             {
-                if(Mathf.Abs(lhs[i] - rhs[i]) > threshold)
-                {
-                    return false;
-                }
+                //print($"error {(lhs - rhs).magnitude}, betw {lhs}, {rhs}");
+                return false;
             }
             return true;
         }
+
+        List<float> speed;
         private List<float> AnglesCurve(List<float> current, List<float> start, List<float> target)
         {
+            speed = speed ?? new List<float>() { 0, 0, 0, 0, 0, 0};
             var fordebug = new List<float>();
             var result = new List<float>();
 
-            var speed = 0f;
             for(int i = 0; i < start.Count(); ++i)
             {
-                var d = target[i] - start[i];
+                var dist = target[i] - start[i];
                 var prog = current[i] - start[i];
+                var diff = target[i] - current[i];
 
 
-                var sign = Mathf.Sign(d * prog);
+                var sign = Mathf.Sign(diff * prog);
 
-                //if(sign > 0 && Mathf.Abs(prog) > Mathf.Abs(d))
-                //{
-                //    start[i] = current[i];
-                //    d = target[i] - start[i];
-                //    prog = current[i] - start[i];
-                //}
-
-
-                var accelRate = curve.Evaluate(Mathf.Clamp(sign * prog / d, 0, 1));
-
-                fordebug.Add(prog / d);
-
-                speed += accel * accelRate;
-                result.Add(current[i] + d * speed * Time.deltaTime);
-
-                if (i == 3)
+                if (sign > 0 && Mathf.Abs(diff) > Mathf.Abs(dist))
                 {
-                    print($"i: {i}, c {current[i]}, s {start[i]}, t {target[i]}");
+                    start[i] = current[i];
+                    dist = target[i] - start[i];
+                    prog = current[i] - start[i];
+                    diff = target[i] - current[i];
+                    speed[i] = 0;
                 }
 
-                // // result.Add(Mathf.Lerp(current[i], target[i], p * Time.deltaTime));
+
+                var accelRate = curve.Evaluate(Mathf.Clamp(1 - Mathf.Abs(diff / dist), 0, 1));
+
+                fordebug.Add(diff / dist);
+
+                speed[i] = Mathf.Clamp(speed[i] + accel * accelRate, 0, maxSpeed);
+                result.Add(current[i] + Mathf.Sign(diff) * Mathf.Abs(dist) * speed[i] * Time.deltaTime);
+
+                if (i == 1)
+                {
+                    print($"i: {i}, c {current[i]}, s {start[i]}, t {target[i]}, dist {dist}, speed {speed[i]}");
+                }
+
+                // // result.add(mathf.lerp(current[i], target[i], p * time.deltatime));
             }
-            //Debug.Log($"progress rate is {fordebug[0]}, {fordebug[1]}, {fordebug[2]}, {fordebug[3]}, {fordebug[4]}, {fordebug[5]}");
+            // Debug.Log($"progress rate is {fordebug[0]}, {fordebug[1]}, {fordebug[2]}, {fordebug[3]}, {fordebug[4]}, {fordebug[5]}");
             return result;
         }
     }

@@ -34,7 +34,6 @@ namespace RobotSimulation
         {
             hC = GetComponent<HomogeneourCoordinate>();
             currentAngles = new List<float>() { angle1 * Mathf.Deg2Rad, angle2 * Mathf.Deg2Rad, angle3 * Mathf.Deg2Rad, angle4 * Mathf.Deg2Rad, angle5 * Mathf.Deg2Rad, angle6 * Mathf.Deg2Rad };
-            fk.SetHC(hC);
         }
 
         void Start()
@@ -106,6 +105,11 @@ namespace RobotSimulation
             return fk;
         }
 
+        public List<LinkParam> GetLinkParams()
+        {
+            return hC.LinkParams;
+        }
+
         public void SetInControl(bool b)
         {
             isInControl = b;
@@ -115,6 +119,15 @@ namespace RobotSimulation
         {
             SetInControl(true);
             SetAngles(angles);
+
+            var readThetas = new List<float>();
+            foreach (var joint in joints)
+            {
+                readThetas.Add(joint.GetPosition());
+            }
+
+            HTMs = hC.GetHTMs(readThetas);
+            EndHTM = HTMs[HTMs.Count() - 1];
         }
         public List<float> GetAngle()
         {
@@ -144,7 +157,7 @@ namespace RobotSimulation
 
         public Vector3 CurrentEndPosition()
         {
-            return fk.GetEndPosition(EndHTM);
+            return fk.GetEndPosition(EndHTM) + transform.position;
         }
 
         public Quaternion CurrentEndRotation()

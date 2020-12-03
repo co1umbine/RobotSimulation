@@ -64,13 +64,7 @@ namespace RobotSimulation
 
         public void KeepTorpue(float state)
         {
-            var hingeSpring = joint.spring;
-            hingeSpring.spring = 100;
-            hingeSpring.damper = 3;
-            hingeSpring.targetPosition = state * Mathf.Rad2Deg;
-            joint.spring = hingeSpring;
-            joint.useSpring = true;
-            prevState = state;
+
         }
     }
 }

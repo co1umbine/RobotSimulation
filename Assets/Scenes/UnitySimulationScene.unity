@@ -17638,13 +17638,13 @@ MonoBehaviour:
   - {fileID: 1881748933}
   - {fileID: 2040602266}
   goalArea: {fileID: 1139792553}
-  threshold: 0.1
+  threshold: 0.01
   p: 5
   pg: 0.001
-  moveLoopMax: 5000
+  moveLoopMax: 1000
   midPoint: {fileID: 530501015}
-  maxSpeed: 10
-  accel: 1
+  maxSpeed: 10000
+  accel: 0.01
   curve:
     serializedVersion: 2
     m_Curve:

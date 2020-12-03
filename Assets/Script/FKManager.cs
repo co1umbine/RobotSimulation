@@ -13,22 +13,21 @@ namespace RobotSimulation
 
         [SerializeField] List<Vector4> pVecs;
 
-        private HomogeneourCoordinate hc;
 
         private void Start()
         {
             hE = pVecs[pVecs.Count() - 1];
         }
 
-        public void SetHC(HomogeneourCoordinate hc)
+        public Vector4 GetEndVector()
         {
-            this.hc = hc;
+            return hE;
         }
 
 
-        public void Foreach(List<float> angles)
+        public static void Foreach(List<LinkParam> linkParams, List<float> angles, FKManager fk)
         {
-            Foreach(hc.GetHTMs(angles));
+            fk.Foreach(HomogeneourCoordinate.GetHTMs(linkParams, angles));
         }
         public void Foreach(List<Matrix4x4> HTMs)
         {
@@ -39,10 +38,9 @@ namespace RobotSimulation
             fowardK[fowardK.Length - 1].localPosition = HTMs[HTMs.Count() - 1] * hE;
         }
 
-        public Vector3 GetEndPosition(List<float> angles)
+        public static Vector3 GetEndPosition(List<LinkParam> linkParams, List<float> angles, FKManager fk)
         {
-
-            return GetEndPosition(hc.GetHTMs(angles)[angles.Count() - 1]);
+            return HomogeneourCoordinate.GetHTMs(linkParams, angles)[~1] * fk.hE;
         }
         public Vector3 GetEndPosition(Matrix4x4 HTM)
         {
