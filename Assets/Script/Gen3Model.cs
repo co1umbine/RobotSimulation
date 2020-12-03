@@ -34,10 +34,12 @@ namespace RobotSimulation
         {
             hC = GetComponent<HomogeneourCoordinate>();
             currentAngles = new List<float>() { angle1 * Mathf.Deg2Rad, angle2 * Mathf.Deg2Rad, angle3 * Mathf.Deg2Rad, angle4 * Mathf.Deg2Rad, angle5 * Mathf.Deg2Rad, angle6 * Mathf.Deg2Rad };
+            fk.SetHC(hC);
         }
 
         void Start()
         {
+            SetAngles(currentAngles);
         }
 
 
@@ -68,7 +70,7 @@ namespace RobotSimulation
 
                     HTMs = hC.GetHTMs(readThetas);
                     EndHTM = HTMs[HTMs.Count() - 1];
-                    fk.FK(HTMs);
+                    fk.Foreach(HTMs);
                 }
                 else
                 {
@@ -77,12 +79,6 @@ namespace RobotSimulation
                         ikCoroutine = StartCoroutine(IKAuto());
                     }
                     SetAngles(currentAngles);
-                    angle1 = currentAngles[0] * Mathf.Rad2Deg;
-                    angle2 = currentAngles[1] * Mathf.Rad2Deg;
-                    angle3 = currentAngles[2] * Mathf.Rad2Deg;
-                    angle4 = currentAngles[3] * Mathf.Rad2Deg;
-                    angle5 = currentAngles[4] * Mathf.Rad2Deg;
-                    angle6 = currentAngles[5] * Mathf.Rad2Deg;
                 }
             }
 
@@ -105,6 +101,11 @@ namespace RobotSimulation
             yield return StartCoroutine(ik.CulcIK(resultAngles, hC.LinkParams, fk, targetPos, taregetRot));
         }
 
+        public FKManager GetFK()
+        {
+            return fk;
+        }
+
         public void SetInControl(bool b)
         {
             isInControl = b;
@@ -114,12 +115,6 @@ namespace RobotSimulation
         {
             SetInControl(true);
             SetAngles(angles);
-            angle1 = angles[0] * Mathf.Rad2Deg;
-            angle2 = angles[1] * Mathf.Rad2Deg;
-            angle3 = angles[2] * Mathf.Rad2Deg;
-            angle4 = angles[3] * Mathf.Rad2Deg;
-            angle5 = angles[4] * Mathf.Rad2Deg;
-            angle6 = angles[5] * Mathf.Rad2Deg;
         }
         public List<float> GetAngle()
         {
@@ -131,14 +126,20 @@ namespace RobotSimulation
             return readThetas;
         }
 
-        private void SetAngles(List<float> angle)
+        private void SetAngles(List<float> angles)
         {
             int i = 0;
             foreach (var joint in joints)
             {
-                joint.OnUpdateJointState(angle[i]);
+                joint.OnUpdateJointState(angles[i]);
                 i++;
             }
+            angle1 = angles[0] * Mathf.Rad2Deg;
+            angle2 = angles[1] * Mathf.Rad2Deg;
+            angle3 = angles[2] * Mathf.Rad2Deg;
+            angle4 = angles[3] * Mathf.Rad2Deg;
+            angle5 = angles[4] * Mathf.Rad2Deg;
+            angle6 = angles[5] * Mathf.Rad2Deg;
         }
 
         public Vector3 CurrentEndPosition()

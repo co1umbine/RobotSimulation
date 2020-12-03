@@ -46,53 +46,6 @@ namespace RobotSimulation
 
             return product;
         }
-        public static double[,] ScalarTimes(this double s, double[,] A)
-        {
-
-            double[,] product = new double[A.GetLength(0), A.GetLength(1)];
-
-            for (int i = 0; i < A.GetLength(0); i++)
-            {
-                for (int j = 0; j < A.GetLength(1); j++)
-                {
-                    product[i, j] = A[i, j] * s;
-                }
-            }
-            return product;
-        }
-        public static double[,] Plus(this double[,] A, double[,] B)
-        {
-            int n = A.GetLength(0);
-            int m = A.GetLength(1);
-
-            var result = new double[n, m];
-
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < m; j++)
-                {
-                    result[i, j] = A[i, j] + B[i, j];
-                }
-            }
-            return result;
-        }
-
-        public static double[,] Minus(this double[,] A, double[,] B)
-        {
-            int n = A.GetLength(0);
-            int m = A.GetLength(1);
-
-            var result = new double[n, m];
-
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < m; j++)
-                {
-                    result[i, j] = A[i, j] - B[i, j];
-                }
-            }
-            return result;
-        }
 
         public static double[,] inverseMatrix(this double[,] A)
         {
@@ -189,6 +142,53 @@ namespace RobotSimulation
                 return invA;
             }
 
+        }
+        public static double[,] ScalarTimes(this double s, double[,] A)
+        {
+
+            double[,] product = new double[A.GetLength(0), A.GetLength(1)];
+
+            for (int i = 0; i < A.GetLength(0); i++)
+            {
+                for (int j = 0; j < A.GetLength(1); j++)
+                {
+                    product[i, j] = A[i, j] * s;
+                }
+            }
+            return product;
+        }
+        public static double[,] Plus(this double[,] A, double[,] B)
+        {
+            int n = A.GetLength(0);
+            int m = A.GetLength(1);
+
+            var result = new double[n, m];
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < m; j++)
+                {
+                    result[i, j] = A[i, j] + B[i, j];
+                }
+            }
+            return result;
+        }
+
+        public static double[,] Minus(this double[,] A, double[,] B)
+        {
+            int n = A.GetLength(0);
+            int m = A.GetLength(1);
+
+            var result = new double[n, m];
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < m; j++)
+                {
+                    result[i, j] = A[i, j] - B[i, j];
+                }
+            }
+            return result;
         }
 
         public static double[,] RotationMatrix(this Matrix4x4 matrix)
