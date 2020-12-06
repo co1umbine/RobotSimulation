@@ -2,10 +2,18 @@
 
 2020年度 ゼミ・エンプラ ロボットシミュレーション
 
-## ツール
+多自由度アームロボットを用いたピッキングタスクのシミュレーション
 
-- ROS
+動画
+https://drive.google.com/file/d/1hUFT0cfMDZI7pvXM6l7vAERgq7dU2RxY/view?usp=sharing
 
-- Unity ROS#
+## 環境
+- Unity 2020.2.0b13
 
-- モデル: 
+- モデル: Kinova Gen3
+- グリップ: robotiq arg85
+
+## 行ったこと
+- リンク座標系の設計
+- リンクパラメータを用いた順運動学の実装
+- Levenberg Marqurdt法を用いた逆運動学の実装
