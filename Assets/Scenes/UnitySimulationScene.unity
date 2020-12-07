@@ -12155,10 +12155,9 @@ MonoBehaviour:
   - {fileID: 1141203154}
   goalArea: {fileID: 982072113}
   threshold: 0.01
-  p: 5
   pg: 0.001
   maxMoveLoop: 10000
-  midPoint: {fileID: 1181104829}
+  midPoints: []
   aveSpeed: 10
   curve:
     serializedVersion: 2
@@ -13479,7 +13478,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 530501014}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.006, y: 0.51250005, z: -0.363}
+  m_LocalPosition: {x: -0.006, y: 0.447, z: -0.363}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_Children: []
   m_Father: {fileID: 2030299735}
@@ -17446,8 +17445,8 @@ MonoBehaviour:
   targetObject: {fileID: 110629185}
   w_n: 6
   w_e_pos: 3
-  w_e_rot: 0.01
-  moveThreshold: 0.0002
+  w_e_rot: 0.05
+  moveThreshold: 0.0001
   posThreshold: 0.00001
   rotThreshold: 0.00001
 --- !u!114 &756210315
@@ -17625,7 +17624,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 756210313}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 97b6db4aed9ae4a478bd41fb0346eb19, type: 3}
   m_Name: 
@@ -17638,10 +17637,10 @@ MonoBehaviour:
   - {fileID: 2040602266}
   goalArea: {fileID: 1139792553}
   threshold: 0.01
-  p: 5
-  pg: 0.001
+  pg: 0.005
   maxMoveLoop: 10000
-  midPoint: {fileID: 530501015}
+  midPoints:
+  - {fileID: 530501015}
   aveSpeed: 1
   curve:
     serializedVersion: 2

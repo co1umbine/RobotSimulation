@@ -11,16 +11,18 @@ namespace RobotSimulation
         [SerializeField] Transform goalArea;
         [SerializeField] float threshold;
 
-        [SerializeField] float p;
         [SerializeField] float pg = 0.01f;
 
         [SerializeField] float maxMoveLoop = 10000;
-        [SerializeField] Transform midPoint;
+        [SerializeField] List<Transform> midPoints;
 
         [SerializeField] float aveSpeed = 10;
         [SerializeField] AnimationCurve curve;
         Gen3Model robot;
         GripController grip;
+
+        FKManager fk;
+        List<LinkParam> linkParams;
         private void Awake()
         {
             robot = GetComponent<Gen3Model>();
@@ -35,29 +37,47 @@ namespace RobotSimulation
         IEnumerator TaskSequence()
         {
             List<float> targetAngle = new List<float>();
-            FKManager fk = robot.GetFK();
-            List<LinkParam> linkParams = robot.GetLinkParams();
+            fk = robot.GetFK();
+            linkParams = robot.GetLinkParams();
+
+            var taskCount = 0;
+
             int moveloop;
             foreach (var task in taskObjects)
             {
                 robot.SetInControl(true);
 
+                var midAngleList = new List<List<float>>();
+
                 var taskAbove = task.position + new Vector3(0, 0.1f, 0);
                 targetAngle = robot.GetAngles();
 
-                //[TODO] 躍度最小
+                if(taskCount == 0)
+                {
+                    yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, -90, 0)));
 
-                yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, -90, 0)));
+                    yield return StartCoroutine(TargetMove(taskAbove, targetAngle));
+                }
+                else
+                {
+                    midAngleList = new List<List<float>>();
+                    foreach (var p in midPoints)
+                    {
+                        yield return StartCoroutine(robot.CulcIK(targetAngle, p.position, Quaternion.Euler(-90, 180, 0)));
+                        midAngleList.Add(new List<float>(targetAngle));
+                    }
 
-                FKManager.Foreach(linkParams, targetAngle, fk);  // debug用に目標位置を赤玉で表示
+                    midAngleList.Reverse();
 
-                yield return StartCoroutine(TargetMove(taskAbove, targetAngle));
+                    yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, -90, 0)));
+                    midAngleList.Add(new List<float>(targetAngle));
+
+                    yield return StartCoroutine(TargetMove(taskAbove, midAngleList));
+                }
 
 
 
                 yield return StartCoroutine(robot.CulcIK(targetAngle, task.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, -90, 0)));
-
-                FKManager.Foreach(linkParams, targetAngle, fk);
 
                 yield return StartCoroutine(TargetMove(task.position + new Vector3(0, 0.01f, 0), targetAngle));
 
@@ -76,25 +96,28 @@ namespace RobotSimulation
 
                 yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, -90, 0)));
 
-                FKManager.Foreach(linkParams, targetAngle, fk);
-
                 yield return StartCoroutine(TargetMove(taskAbove, targetAngle));
 
 
-
-                yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position, Quaternion.Euler(-90, 180, 0)));
-
-                FKManager.Foreach(linkParams, targetAngle, fk);
-
-                yield return StartCoroutine(TargetMove(midPoint.position, targetAngle));
-
-                
-
+                midAngleList = new List<List<float>>();
+                foreach (var p in midPoints)
+                {
+                    yield return StartCoroutine(robot.CulcIK(targetAngle, p.position, Quaternion.Euler(-90, 180, 0)));
+                    midAngleList.Add(new List<float>(targetAngle));
+                }
                 yield return StartCoroutine(robot.CulcIK(targetAngle, goalArea.transform.position, Quaternion.Euler(-90, 90, 0)));
+                midAngleList.Add(new List<float>(targetAngle));
 
-                FKManager.Foreach(linkParams, targetAngle, fk);
 
-                yield return StartCoroutine(TargetMove(goalArea.position, targetAngle));
+
+                yield return StartCoroutine(TargetMove(goalArea.position, midAngleList));
+
+
+
+
+                //FKManager.Foreach(linkParams, targetAngle, fk);
+
+                //yield return StartCoroutine(TargetMove(goalArea.position, targetAngle));
 
                 
 
@@ -107,19 +130,11 @@ namespace RobotSimulation
                     moveloop++;
                     yield return null;
                 }
-
-
-                print("culc");
-                yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position, Quaternion.Euler(-90, 0, 0)));
-
-                FKManager.Foreach(linkParams, targetAngle, fk);
-
-                yield return StartCoroutine(TargetMove(midPoint.position, targetAngle));
+                ++taskCount;
             }
 
             targetAngle = targetAngle.Select(a => 0f).ToList();
 
-            FKManager.Foreach(linkParams, targetAngle, fk);
 
             yield return StartCoroutine(AngleMove(targetAngle));
 
@@ -130,16 +145,62 @@ namespace RobotSimulation
         {
             var startAngle = robot.GetAngles();
             var moveTime = GetMagnitude(robot.GetAngles(), targetAngle) / aveSpeed;
-            int moveloop = 0;
 
             var currentTime = 0.0f;
+            int moveloop = 0;
 
+            FKManager.Foreach(linkParams, targetAngle, fk);
 
             print("moving");
 
             while (!IsCloseEnough(robot.CurrentEndPosition(), targetPos) && moveloop < maxMoveLoop && currentTime < moveTime)
             {
                 robot.SetAngle(AnglesDelta(robot.GetAngles(), startAngle, targetAngle, currentTime, moveTime));
+                moveloop++;
+                currentTime += Time.deltaTime;
+                yield return null;
+            }
+        }
+        IEnumerator TargetMove(Vector3 targetPos, List<List<float>> midsTargetAngles)
+        {
+            var startAngle = robot.GetAngles();
+
+            var deltas = new List<float>();
+            deltas.Add(GetMagnitude(startAngle, midsTargetAngles[0]));
+
+            for (var i = 1; i < midsTargetAngles.Count(); ++i)
+            {
+                deltas.Add(GetMagnitude(midsTargetAngles[i - 1], midsTargetAngles[i]));
+            }
+
+            var allDelta = deltas.Sum();
+            var phasies = deltas.Select(d => d / allDelta).ToList();
+            var moveTime = allDelta / aveSpeed;
+
+            var currentTime = 0.0f;
+            int moveloop = 0;
+
+
+            print("moving");
+
+            int index = 0;
+
+            FKManager.Foreach(linkParams, midsTargetAngles[index], fk);
+
+            float offset = 0;
+            float progress = 0;
+            while (!IsCloseEnough(robot.CurrentEndPosition(), targetPos) && moveloop < maxMoveLoop && currentTime < moveTime)
+            {
+                if (progress >= 1)
+                {
+                    offset += phasies[index];
+                    ++index;
+                    startAngle = robot.GetAngles();
+                    FKManager.Foreach(linkParams, midsTargetAngles[index], fk);
+                }
+                robot.SetAngle(AnglesDeltaByPhase(robot.GetAngles(), startAngle, midsTargetAngles[index], offset, phasies[index], out progress, currentTime, moveTime));
+
+
                 moveloop++;
                 currentTime += Time.deltaTime;
                 yield return null;
@@ -153,10 +214,11 @@ namespace RobotSimulation
 
             var currentTime = 0.0f;
 
+            FKManager.Foreach(linkParams, targetAngle, fk);
             print("moving");
 
             var startAngle = robot.GetAngles();
-            while (robot.GetAngles().Where(a => a != 0).Any() && moveloop < maxMoveLoop)
+            while (robot.GetAngles().Where(a => a != 0).Any() && moveloop < maxMoveLoop && currentTime < moveTime)
             {
                 robot.SetAngle(AnglesDelta(robot.GetAngles(), startAngle, targetAngle, currentTime, moveTime));
                 moveloop++;
@@ -186,18 +248,35 @@ namespace RobotSimulation
                 );
         }
 
-        List<float> speed;
         private List<float> AnglesDelta(List<float> current, List<float> start, List<float> target, float currentTime, float targetTime)
         {
-            var fordebug = new List<float>();
             var result = new List<float>();
             var t_d_tf = currentTime / targetTime;
+            var rate = 10 * Mathf.Pow(t_d_tf, 3) - 15 * Mathf.Pow(t_d_tf, 4) + 6 * Mathf.Pow(t_d_tf, 5);
 
             for (int i = 0; i < start.Count(); ++i)
             {
                 var xf_m_x0 = target[i] - start[i];
 
-                var delta = xf_m_x0 * (10 * Mathf.Pow(t_d_tf, 3) - 15 * Mathf.Pow(t_d_tf, 4) + 6 * Mathf.Pow(t_d_tf, 5));
+                var delta = xf_m_x0 * rate;
+
+                result.Add(start[i] + delta);
+            }
+            return result;
+        }
+
+        private List<float> AnglesDeltaByPhase(List<float> current, List<float> start, List<float> midsTarget, float offset, float phase, out float progress, float currentTime, float targetTime)
+        {
+            var result = new List<float>();
+            var t_d_tf = currentTime / targetTime;
+
+            var rate = 10 * Mathf.Pow(t_d_tf, 3) - 15 * Mathf.Pow(t_d_tf, 4) + 6 * Mathf.Pow(t_d_tf, 5);
+            progress = (rate - offset) / phase;
+
+            for (int i = 0; i < start.Count(); ++i)
+            {
+                var xf_m_x0 = midsTarget[i] - start[i];
+                var delta = xf_m_x0 * progress;
 
                 result.Add(start[i] + delta);
             }
