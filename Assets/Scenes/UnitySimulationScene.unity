@@ -12157,10 +12157,9 @@ MonoBehaviour:
   threshold: 0.01
   p: 5
   pg: 0.001
-  moveLoopMax: 1000
+  maxMoveLoop: 10000
   midPoint: {fileID: 1181104829}
-  maxSpeed: 10
-  accel: 1
+  aveSpeed: 10
   curve:
     serializedVersion: 2
     m_Curve: []
@@ -17641,10 +17640,9 @@ MonoBehaviour:
   threshold: 0.01
   p: 5
   pg: 0.001
-  moveLoopMax: 1000
+  maxMoveLoop: 10000
   midPoint: {fileID: 530501015}
-  maxSpeed: 10000
-  accel: 0.01
+  aveSpeed: 1
   curve:
     serializedVersion: 2
     m_Curve:

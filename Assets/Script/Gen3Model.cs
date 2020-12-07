@@ -97,6 +97,7 @@ namespace RobotSimulation
 
         public IEnumerator CulcIK(List<float> resultAngles, Vector3 targetPos, Quaternion taregetRot)
         {
+            print("culc");
             yield return StartCoroutine(ik.CulcIK(resultAngles, hC.LinkParams, fk, targetPos, taregetRot));
         }
 
@@ -129,7 +130,7 @@ namespace RobotSimulation
             HTMs = hC.GetHTMs(readThetas);
             EndHTM = HTMs[HTMs.Count() - 1];
         }
-        public List<float> GetAngle()
+        public List<float> GetAngles()
         {
             var readThetas = new List<float>();
             foreach (var joint in joints)

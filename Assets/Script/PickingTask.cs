@@ -14,11 +14,10 @@ namespace RobotSimulation
         [SerializeField] float p;
         [SerializeField] float pg = 0.01f;
 
-        [SerializeField] float moveLoopMax = 10000;
+        [SerializeField] float maxMoveLoop = 10000;
         [SerializeField] Transform midPoint;
 
-        [SerializeField] float maxSpeed = 10;
-        [SerializeField] float accel = 1;
+        [SerializeField] float aveSpeed = 10;
         [SerializeField] AnimationCurve curve;
         Gen3Model robot;
         GripController grip;
@@ -36,7 +35,6 @@ namespace RobotSimulation
         IEnumerator TaskSequence()
         {
             List<float> targetAngle = new List<float>();
-            List<float> startAngle;
             FKManager fk = robot.GetFK();
             List<LinkParam> linkParams = robot.GetLinkParams();
             int moveloop;
@@ -45,37 +43,27 @@ namespace RobotSimulation
                 robot.SetInControl(true);
 
                 var taskAbove = task.position + new Vector3(0, 0.1f, 0);
-                targetAngle = robot.GetAngle();
+                targetAngle = robot.GetAngles();
+
+                //[TODO] 躍度最小
+
                 yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, -90, 0)));
 
-                FKManager.Foreach(linkParams, targetAngle, fk);
-                moveloop = 0;
-                print("moving");
-                startAngle = robot.GetAngle();
-                while(!IsCloseEnough(robot.CurrentEndPosition(), taskAbove) && moveloop < moveLoopMax)
-                {
-                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
-                    moveloop++;
-                    yield return null;
-                }
+                FKManager.Foreach(linkParams, targetAngle, fk);  // debug用に目標位置を赤玉で表示
+
+                yield return StartCoroutine(TargetMove(taskAbove, targetAngle));
 
 
-                print("culc");
+
                 yield return StartCoroutine(robot.CulcIK(targetAngle, task.position + new Vector3(0, 0.01f, 0), Quaternion.Euler(-90, -90, 0)));
 
                 FKManager.Foreach(linkParams, targetAngle, fk);
-                moveloop = 0;
-                print("moving");
-                startAngle = robot.GetAngle();
-                while (!IsCloseEnough(robot.CurrentEndPosition(), task.position + new Vector3(0, 0.01f, 0)) && moveloop < moveLoopMax)
-                {
-                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
-                    moveloop++;
-                    yield return null;
-                }
+
+                yield return StartCoroutine(TargetMove(task.position + new Vector3(0, 0.01f, 0), targetAngle));
+
 
                 moveloop = 0;
-                print("moving");
+                print("gripping");
                 float gripWidth = 0;
                 while(gripWidth < 0.28f)
                 {
@@ -86,51 +74,32 @@ namespace RobotSimulation
                 }
 
 
-                print("culc");
                 yield return StartCoroutine(robot.CulcIK(targetAngle, taskAbove, Quaternion.Euler(-90, -90, 0)));
 
                 FKManager.Foreach(linkParams, targetAngle, fk);
-                moveloop = 0;
-                print("moving");
-                startAngle = robot.GetAngle();
-                while (!IsCloseEnough(robot.CurrentEndPosition(), taskAbove) && moveloop < moveLoopMax)
-                {
-                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
-                    moveloop++;
-                    yield return null;
-                }
+
+                yield return StartCoroutine(TargetMove(taskAbove, targetAngle));
 
 
-                print("culc");
+
                 yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position, Quaternion.Euler(-90, 180, 0)));
 
                 FKManager.Foreach(linkParams, targetAngle, fk);
-                moveloop = 0;
-                print("moving");
-                startAngle = robot.GetAngle();
-                while (!IsCloseEnough(robot.CurrentEndPosition(), midPoint.position) && moveloop < moveLoopMax)
-                {
-                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
-                    moveloop++;
-                    yield return null;
-                }
 
-                print("culc");
+                yield return StartCoroutine(TargetMove(midPoint.position, targetAngle));
+
+                
+
                 yield return StartCoroutine(robot.CulcIK(targetAngle, goalArea.transform.position, Quaternion.Euler(-90, 90, 0)));
 
                 FKManager.Foreach(linkParams, targetAngle, fk);
-                moveloop = 0;
-                print("moving");
-                startAngle = robot.GetAngle();
-                while (!IsCloseEnough(robot.CurrentEndPosition(), goalArea.position) && moveloop < moveLoopMax)
-                {
-                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
-                    moveloop++;
-                    yield return null;
-                }
+
+                yield return StartCoroutine(TargetMove(goalArea.position, targetAngle));
+
+                
 
                 moveloop = 0;
-                print("moving");
+                print("gripping");
                 while (gripWidth >= 0)
                 {
                     gripWidth -= pg;
@@ -144,33 +113,56 @@ namespace RobotSimulation
                 yield return StartCoroutine(robot.CulcIK(targetAngle, midPoint.position, Quaternion.Euler(-90, 0, 0)));
 
                 FKManager.Foreach(linkParams, targetAngle, fk);
-                moveloop = 0;
-                print("moving");
-                startAngle = robot.GetAngle();
-                while (!IsCloseEnough(robot.CurrentEndPosition(), midPoint.position) && moveloop < moveLoopMax)
-                {
-                    robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
-                    moveloop++;
-                    yield return null;
-                }
-                yield return null;
+
+                yield return StartCoroutine(TargetMove(midPoint.position, targetAngle));
             }
 
             targetAngle = targetAngle.Select(a => 0f).ToList();
 
             FKManager.Foreach(linkParams, targetAngle, fk);
-            moveloop = 0;
-            print("moving");
-            startAngle = robot.GetAngle();
-            while (robot.GetAngle().Where(a => a!=0).Any() && moveloop < moveLoopMax)
-            {
-                robot.SetAngle(AnglesCurve(robot.GetAngle(), startAngle, targetAngle));
-                moveloop++;
-                yield return null;
-            }
+
+            yield return StartCoroutine(AngleMove(targetAngle));
 
             robot.SetInControl(false);
+        }
 
+        IEnumerator TargetMove(Vector3 targetPos, List<float> targetAngle)
+        {
+            var startAngle = robot.GetAngles();
+            var moveTime = GetMagnitude(robot.GetAngles(), targetAngle) / aveSpeed;
+            int moveloop = 0;
+
+            var currentTime = 0.0f;
+
+
+            print("moving");
+
+            while (!IsCloseEnough(robot.CurrentEndPosition(), targetPos) && moveloop < maxMoveLoop && currentTime < moveTime)
+            {
+                robot.SetAngle(AnglesDelta(robot.GetAngles(), startAngle, targetAngle, currentTime, moveTime));
+                moveloop++;
+                currentTime += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        IEnumerator AngleMove(List<float> targetAngle)
+        {
+            int moveloop = 0;
+            var moveTime = GetMagnitude(robot.GetAngles(), targetAngle) / aveSpeed;
+
+            var currentTime = 0.0f;
+
+            print("moving");
+
+            var startAngle = robot.GetAngles();
+            while (robot.GetAngles().Where(a => a != 0).Any() && moveloop < maxMoveLoop)
+            {
+                robot.SetAngle(AnglesDelta(robot.GetAngles(), startAngle, targetAngle, currentTime, moveTime));
+                moveloop++;
+                currentTime += Time.deltaTime;
+                yield return null;
+            }
         }
 
         private bool IsCloseEnough(Vector3 lhs, Vector3 rhs)
@@ -183,47 +175,32 @@ namespace RobotSimulation
             return true;
         }
 
-        List<float> speed;
-        private List<float> AnglesCurve(List<float> current, List<float> start, List<float> target)
+        private float GetMagnitude(List<float> lhs, List<float> rhs)
         {
-            speed = speed ?? new List<float>() { 0, 0, 0, 0, 0, 0};
+            return lhs
+                .Zip(rhs, (la, ra) => (la, ra))
+                .Aggregate(
+                    0.0f,
+                    (r, lra) => r + Mathf.Pow(lra.la - lra.ra, 2),
+                    r => Mathf.Sqrt(r)
+                );
+        }
+
+        List<float> speed;
+        private List<float> AnglesDelta(List<float> current, List<float> start, List<float> target, float currentTime, float targetTime)
+        {
             var fordebug = new List<float>();
             var result = new List<float>();
+            var t_d_tf = currentTime / targetTime;
 
-            for(int i = 0; i < start.Count(); ++i)
+            for (int i = 0; i < start.Count(); ++i)
             {
-                var dist = target[i] - start[i];
-                var prog = current[i] - start[i];
-                var diff = target[i] - current[i];
+                var xf_m_x0 = target[i] - start[i];
 
+                var delta = xf_m_x0 * (10 * Mathf.Pow(t_d_tf, 3) - 15 * Mathf.Pow(t_d_tf, 4) + 6 * Mathf.Pow(t_d_tf, 5));
 
-                var sign = Mathf.Sign(diff * prog);
-
-                if (sign > 0 && Mathf.Abs(diff) > Mathf.Abs(dist))
-                {
-                    start[i] = current[i];
-                    dist = target[i] - start[i];
-                    prog = current[i] - start[i];
-                    diff = target[i] - current[i];
-                    speed[i] = 0;
-                }
-
-
-                var accelRate = curve.Evaluate(Mathf.Clamp(1 - Mathf.Abs(diff / dist), 0, 1));
-
-                fordebug.Add(diff / dist);
-
-                speed[i] = Mathf.Clamp(speed[i] + accel * accelRate, 0, maxSpeed);
-                result.Add(current[i] + Mathf.Sign(diff) * Mathf.Abs(dist) * speed[i] * Time.deltaTime);
-
-                if (i == 1)
-                {
-                    print($"i: {i}, c {current[i]}, s {start[i]}, t {target[i]}, dist {dist}, speed {speed[i]}");
-                }
-
-                // // result.add(mathf.lerp(current[i], target[i], p * time.deltatime));
+                result.Add(start[i] + delta);
             }
-            // Debug.Log($"progress rate is {fordebug[0]}, {fordebug[1]}, {fordebug[2]}, {fordebug[3]}, {fordebug[4]}, {fordebug[5]}");
             return result;
         }
     }
