@@ -13,12 +13,23 @@ namespace RobotSimulation
 
         [SerializeField] List<Vector4> pVecs;
 
+
         private void Start()
         {
             hE = pVecs[pVecs.Count() - 1];
         }
 
-        public void FK(List<Matrix4x4> HTMs)
+        public Vector4 GetEndVector()
+        {
+            return hE;
+        }
+
+
+        public static void Foreach(List<LinkParam> linkParams, List<float> angles, FKManager fk)
+        {
+            fk.Foreach(HomogeneourCoordinate.GetHTMs(linkParams, angles));
+        }
+        public void Foreach(List<Matrix4x4> HTMs)
         {
             for (var i = 0; i < HTMs.Count(); i++)
             {
@@ -27,9 +38,13 @@ namespace RobotSimulation
             fowardK[fowardK.Length - 1].localPosition = HTMs[HTMs.Count() - 1] * hE;
         }
 
-        public Vector3 GetEndPosition(Matrix4x4 HTMs)
+        public static Vector3 GetEndPosition(List<LinkParam> linkParams, List<float> angles, FKManager fk)
         {
-            return HTMs * hE;
+            return HomogeneourCoordinate.GetHTMs(linkParams, angles)[~1] * fk.hE;
+        }
+        public Vector3 GetEndPosition(Matrix4x4 HTM)
+        {
+            return HTM * hE;
         }
 
         public BasicJacobian GetJacobian(List<Matrix4x4> HTMs)

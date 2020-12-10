@@ -4,5 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/OpenCVForUnity/Examples/OpenCVForUnityExample.unity
+    guid: c1089b6c5cb5b0742be92732f5bdc172
+  - enabled: 1
+    path: Assets/OpenCVForUnity/Examples/Basic/Texture2DToMatExample/Texture2DToMatExample.unity
+    guid: b94bd88ac03377444b5e30870dfd377a
   m_configObjects: {}

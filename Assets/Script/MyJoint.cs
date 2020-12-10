@@ -10,7 +10,6 @@ namespace RobotSimulation
         private Rigidbody rb;
         private HingeJoint joint;
         private ArticulationBody articulation;
-        [SerializeField] private MyJoint child;
         [SerializeField] private float pGain = 1;
 
         Quaternion defaultRotation;
@@ -65,20 +64,7 @@ namespace RobotSimulation
 
         public void KeepTorpue(float state)
         {
-            var hingeSpring = joint.spring;
-            hingeSpring.spring = 100;
-            hingeSpring.damper = 3;
-            hingeSpring.targetPosition = state * Mathf.Rad2Deg;
-            joint.spring = hingeSpring;
-            joint.useSpring = true;
-            prevState = state;
-        }
 
-        public void UpdateJointStateHierarchical(List<float> states)
-        {
-            OnUpdateJointState(states[0]);
-            states.Remove(states[0]);
-            child?.UpdateJointStateHierarchical(states);
         }
     }
 }
