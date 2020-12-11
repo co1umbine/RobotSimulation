@@ -17,7 +17,6 @@ namespace RobotSimulation
         [SerializeField] List<Transform> midPoints;
 
         [SerializeField] float aveSpeed = 10;
-        [SerializeField] AnimationCurve curve;
         Gen3Model robot;
         GripController grip;
 
@@ -196,6 +195,8 @@ namespace RobotSimulation
                     offset += phasies[index];
                     ++index;
                     startAngle = robot.GetAngles();
+
+                    if (index >= midsTargetAngles.Count()) break;
                     FKManager.Foreach(linkParams, midsTargetAngles[index], fk);
                 }
                 robot.SetAngle(AnglesDeltaByPhase(robot.GetAngles(), startAngle, midsTargetAngles[index], offset, phasies[index], out progress, currentTime, moveTime));
