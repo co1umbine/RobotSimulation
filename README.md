@@ -5,7 +5,7 @@
 多自由度アームロボットを用いたピッキングタスクのシミュレーション
 
 動画
-<iframe width="560" height="315" src="https://www.youtube.com/embed/BE9ZL2OWh1E" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+https://www.youtube.com/watch?v=BE9ZL2OWh1E
 
 ## 環境
 - Unity 2020.2.0b13
