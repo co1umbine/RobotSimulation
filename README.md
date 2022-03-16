@@ -5,11 +5,10 @@
 多自由度アームロボットを用いたピッキングタスクのシミュレーション
 
 動画
-https://drive.google.com/file/d/1hUFT0cfMDZI7pvXM6l7vAERgq7dU2RxY/view?usp=sharing
+
 
 ## 環境
 - Unity 2020.2.0b13
-
 - モデル: Kinova Gen3
 - グリップ: robotiq arg85
 
